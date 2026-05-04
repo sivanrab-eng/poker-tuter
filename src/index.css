@@ -37,6 +37,12 @@
 
     --radius: 0.75rem;
 
+    /* Casino arena tokens */
+    --casino-felt: 145 50% 18%;
+    --casino-gold: 43 80% 60%;
+    --casino-red: 0 70% 45%;
+    --casino-cream: 40 30% 92%;
+
     /* Custom tokens */
     --gold: 43 72% 55%;
     --gold-light: 43 60% 75%;
