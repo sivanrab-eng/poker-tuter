@@ -31,6 +31,12 @@ export default {
           DEFAULT: "hsl(var(--cream))",
           dark: "hsl(var(--cream-dark))",
         },
+        casino: {
+          felt: "hsl(var(--casino-felt))",
+          gold: "hsl(var(--casino-gold))",
+          red: "hsl(var(--casino-red))",
+          cream: "hsl(var(--casino-cream))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
