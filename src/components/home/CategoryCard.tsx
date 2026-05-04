@@ -40,7 +40,7 @@ const CategoryCard = ({ title, description, subtitle, image, onClick, infoConten
                 e.stopPropagation();
                 setShowInfo(true);
               }}
-              className="text-gold hover:text-gold-dark transition-colors flex-shrink-0"
+              className="text-primary/70 hover:text-primary transition-colors flex-shrink-0"
             >
               <HelpCircle className="h-4 w-4" />
             </button>
