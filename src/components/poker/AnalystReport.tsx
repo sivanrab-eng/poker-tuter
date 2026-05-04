@@ -181,9 +181,41 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
                       ))}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-[10px] text-muted-foreground">פוט: <span className="text-primary font-bold">{snapshot.pot}</span></span>
-                    <span className="text-[10px] text-muted-foreground">עלות קול: <span className="text-primary font-bold">{snapshot.toCall}</span></span>
+
+                  {/* Calculation details table */}
+                  <div className="bg-card/30 rounded p-2 mb-1.5 space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">פוט:</span>
+                      <span className="text-[10px] text-primary font-bold">{snapshot.pot}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">עלות קול:</span>
+                      <span className="text-[10px] text-primary font-bold">{snapshot.toCall}</span>
+                    </div>
+                    {snapshot.toCall > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground">פוט אודס (עלות/פוט+עלות):</span>
+                        <span className="text-[10px] text-primary font-bold">{potOddsResult.potOdds.toFixed(1)}%</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">קלפים שנותרו בחפיסה:</span>
+                      <span className="text-[10px] text-primary font-bold">{outsResult.cardsRemaining}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">סה״כ אאוטס:</span>
+                      <span className="text-[10px] text-primary font-bold">{outsResult.totalOuts}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">סיכוי שיפור (קלף הבא):</span>
+                      <span className="text-[10px] text-primary font-bold">{potOddsResult.outsOdds.toFixed(1)}%</span>
+                    </div>
+                    {snapshot.cards.length === 3 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground">סיכוי שיפור (עד ריבר):</span>
+                        <span className="text-[10px] text-primary font-bold">{potOddsResult.outsOddsRunout.toFixed(1)}%</span>
+                      </div>
+                    )}
                   </div>
                   
                   {outsResult.draws.length > 0 ? (
@@ -197,23 +229,29 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
                           <span className="text-[10px] text-primary font-bold">{draw.outs} אאוטס</span>
                         </div>
                       ))}
-                      <div className="flex items-center justify-between bg-card/50 rounded px-2 py-1">
-                        <span className="text-[10px] text-muted-foreground">סה״כ אאוטס:</span>
-                        <span className="text-[10px] text-primary font-bold">{outsResult.totalOuts}</span>
-                      </div>
                       
                       {/* Pot odds bar */}
                       <div className="mt-1">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-[10px] text-muted-foreground">סיכוי שיפור:</span>
-                          <span className="text-[10px] text-primary font-bold">{potOddsResult.outsOdds.toFixed(1)}%</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {snapshot.cards.length === 3 ? 'שיפור עד ריבר:' : 'שיפור:'}
+                          </span>
+                          <span className="text-[10px] text-primary font-bold">
+                            {snapshot.cards.length === 3 ? potOddsResult.outsOddsRunout.toFixed(1) : potOddsResult.outsOdds.toFixed(1)}%
+                          </span>
                         </div>
                         <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                           <div 
                             className={`h-full rounded-full transition-all ${potOddsResult.isCallProfitable ? 'bg-green-500' : 'bg-red-500'}`}
-                            style={{ width: `${Math.min(potOddsResult.outsOdds, 100)}%` }}
+                            style={{ width: `${Math.min(snapshot.cards.length === 3 ? potOddsResult.outsOddsRunout : potOddsResult.outsOdds, 100)}%` }}
                           />
                         </div>
+                      </div>
+
+                      {/* Decision */}
+                      <div className={`flex items-center gap-1 mt-1 px-2 py-1 rounded text-[10px] font-bold ${potOddsResult.isCallProfitable ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        <span>{potOddsResult.isCallProfitable ? '✅' : '❌'}</span>
+                        <span>{potOddsResult.isCallProfitable ? 'קול רווחי' : 'קול לא רווחי'}</span>
                       </div>
                     </div>
                   ) : (
