@@ -163,10 +163,9 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
           <div className="space-y-3">
             {phaseSnapshots.map((snapshot, idx) => {
               const outsResult = calculateOuts(game.playerHand, snapshot.cards);
-              const toCall = 20; // simplified: typical bet to call
               const potOddsResult = calculatePotOdds(
-                game.pot,
-                toCall,
+                snapshot.pot,
+                snapshot.toCall,
                 outsResult.totalOuts,
                 outsResult.cardsRemaining,
                 snapshot.cards.length
