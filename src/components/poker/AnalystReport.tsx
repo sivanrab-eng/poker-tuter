@@ -192,10 +192,15 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
                       <span className="text-[10px] text-muted-foreground">עלות קול:</span>
                       <span className="text-[10px] text-primary font-bold">{snapshot.toCall}</span>
                     </div>
-                    {snapshot.toCall > 0 && (
+                    {snapshot.toCall > 0 ? (
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] text-muted-foreground">פוט אודס (עלות/פוט+עלות):</span>
                         <span className="text-[10px] text-primary font-bold">{potOddsResult.potOdds.toFixed(1)}%</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground">פוט אודס:</span>
+                        <span className="text-[10px] text-green-400 font-bold">צ׳ק חינמי ✅</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between">
