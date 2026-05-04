@@ -34,7 +34,7 @@ const CategoryCard = ({ title, description, subtitle, image, onClick, infoConten
         />
         <div className="relative z-10 flex-1 min-w-0">
           <div className="flex justify-between items-start gap-1">
-            <h3 className="text-sm font-heading font-bold text-forest leading-tight">{title}</h3>
+            <h3 className="text-sm font-heading font-bold text-primary leading-tight">{title}</h3>
             <button
               onClick={(e) => {
                 e.stopPropagation();

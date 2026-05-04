@@ -6,62 +6,62 @@
 
 @layer base {
   :root {
-    /* Cream/parchment poker academy theme */
-    --background: 40 33% 96%;
-    --foreground: 153 40% 16%;
+    /* Casino theme — dark green felt, gold & cream */
+    --background: 145 50% 12%;
+    --foreground: 40 30% 92%;
 
-    --card: 40 30% 94%;
-    --card-foreground: 153 40% 16%;
+    --card: 145 45% 15%;
+    --card-foreground: 40 30% 92%;
 
-    --popover: 40 33% 96%;
-    --popover-foreground: 153 40% 16%;
+    --popover: 145 50% 14%;
+    --popover-foreground: 40 30% 92%;
 
-    --primary: 153 45% 22%;
-    --primary-foreground: 40 33% 96%;
+    --primary: 43 80% 55%;
+    --primary-foreground: 145 50% 10%;
 
-    --secondary: 40 25% 90%;
-    --secondary-foreground: 153 40% 16%;
+    --secondary: 145 35% 20%;
+    --secondary-foreground: 40 30% 92%;
 
-    --muted: 40 20% 92%;
-    --muted-foreground: 153 20% 40%;
+    --muted: 145 30% 18%;
+    --muted-foreground: 40 20% 70%;
 
-    --accent: 43 72% 55%;
-    --accent-foreground: 153 40% 16%;
+    --accent: 0 65% 50%;
+    --accent-foreground: 40 30% 95%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 40 33% 96%;
 
-    --border: 43 40% 82%;
-    --input: 40 25% 88%;
-    --ring: 153 45% 22%;
+    --border: 43 50% 35%;
+    --input: 145 30% 20%;
+    --ring: 43 80% 55%;
 
     --radius: 0.75rem;
 
-    /* Casino arena tokens */
-    --casino-felt: 145 50% 18%;
-    --casino-gold: 43 80% 60%;
-    --casino-red: 0 70% 45%;
+    /* Casino tokens */
+    --casino-felt: 145 50% 12%;
+    --casino-gold: 43 80% 55%;
+    --casino-red: 0 65% 50%;
     --casino-cream: 40 30% 92%;
 
-    /* Custom tokens */
-    --gold: 43 72% 55%;
-    --gold-light: 43 60% 75%;
+    /* Semantic tokens */
+    --gold: 43 80% 55%;
+    --gold-light: 43 60% 70%;
     --gold-dark: 43 72% 40%;
-    --forest: 153 45% 22%;
-    --forest-light: 153 30% 35%;
-    --cream: 40 33% 96%;
-    --cream-dark: 40 25% 90%;
-    --line-pattern: hsl(43 40% 82% / 0.4);
+    --forest: 145 50% 12%;
+    --forest-light: 145 35% 25%;
+    --cream: 40 30% 92%;
+    --cream-dark: 40 25% 82%;
+    --line-pattern: hsl(43 50% 35% / 0.25);
 
-    /* Sidebar - not used much but keep compatible */
-    --sidebar-background: 40 30% 94%;
-    --sidebar-foreground: 153 40% 16%;
-    --sidebar-primary: 153 45% 22%;
-    --sidebar-primary-foreground: 40 33% 96%;
-    --sidebar-accent: 40 25% 90%;
-    --sidebar-accent-foreground: 153 40% 16%;
-    --sidebar-border: 43 40% 82%;
-    --sidebar-ring: 153 45% 22%;
+    /* Sidebar */
+    --sidebar-background: 145 45% 15%;
+    --sidebar-foreground: 40 30% 92%;
+    --sidebar-primary: 43 80% 55%;
+    --sidebar-primary-foreground: 145 50% 10%;
+    --sidebar-accent: 145 35% 20%;
+    --sidebar-accent-foreground: 40 30% 92%;
+    --sidebar-border: 43 50% 35%;
+    --sidebar-ring: 43 80% 55%;
 
     /* Font families */
     --font-heading: 'Frank Ruhl Libre', 'Georgia', serif;

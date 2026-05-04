@@ -104,23 +104,23 @@ const Index = () => {
         </div>
 
         {/* Arena section - casino styled */}
-        <div className="rounded-lg overflow-hidden border border-casino-felt/30">
-          <div className="bg-casino-felt py-1.5 px-3 text-center">
-            <h2 className="text-sm font-heading font-bold text-casino-gold">
+        <div className="rounded-lg overflow-hidden border border-secondary/30">
+          <div className="bg-secondary py-1.5 px-3 text-center">
+            <h2 className="text-sm font-heading font-bold text-primary">
               🎰 זירת המשחק: בחר את הסביבה שלך
             </h2>
           </div>
-          <div className="bg-casino-felt/90 grid grid-cols-3 divide-x divide-casino-gold/20">
+          <div className="bg-secondary/90 grid grid-cols-3 divide-x divide-primary/20">
             {arenaItems.map((item) => (
               <button
                 key={item.title}
                 onClick={() => navigate(item.route)}
-                className="py-2.5 px-2 text-center hover:bg-casino-felt transition-colors"
+                className="py-2.5 px-2 text-center hover:bg-secondary transition-colors"
               >
-                <h4 className="text-xs font-heading font-bold text-casino-gold mb-1">
+                <h4 className="text-xs font-heading font-bold text-primary mb-1">
                   {item.title}
                 </h4>
-                <p className="text-[10px] text-casino-cream/70 leading-tight">{item.description}</p>
+                <p className="text-[10px] text-foreground/70 leading-tight">{item.description}</p>
               </button>
             ))}
           </div>

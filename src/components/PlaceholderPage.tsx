@@ -18,7 +18,7 @@ const PlaceholderPage = ({ title, description }: PlaceholderPageProps) => {
           חזרה לתפריט
         </Button>
         <div className="bg-card rounded-xl gold-border p-8 text-center corner-accent">
-          <h1 className="text-3xl font-heading font-bold text-forest mb-4">{title}</h1>
+          <h1 className="text-3xl font-heading font-bold text-primary mb-4">{title}</h1>
           <p className="text-muted-foreground">{description}</p>
           <p className="text-sm text-gold-dark mt-4">בקרוב...</p>
         </div>
