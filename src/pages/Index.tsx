@@ -87,9 +87,9 @@ const Index = () => {
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       <HeroSection />
 
-      <main className="flex-1 max-w-lg mx-auto w-full px-3 flex flex-col gap-2 pb-2 overflow-hidden">
+      <main className="flex-1 max-w-lg mx-auto w-full px-3 flex flex-col justify-between gap-2 pb-3 overflow-hidden">
         {/* Main category cards */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 flex-1 justify-evenly">
           {sections.map((section) => (
             <CategoryCard
               key={section.id}
