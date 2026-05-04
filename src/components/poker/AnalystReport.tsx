@@ -23,25 +23,66 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
   
   const playerActions = game.actions.filter(a => a.actor === 'player');
 
-  // Calculate outs & pot odds per phase
+  // Calculate outs & pot odds per phase with real pot/bet values
   const getPhaseAnalysis = () => {
-    const phases: { phase: string; community: typeof game.communityCards; pot: number; toCall: number }[] = [];
-    
-    // Reconstruct phases from actions
-    let runningPot = 30; // initial blinds
-    const communitySnapshots: { phase: string; cards: typeof game.communityCards }[] = [];
-    
-    if (game.communityCards.length >= 3) {
-      communitySnapshots.push({ phase: 'פלופ', cards: game.communityCards.slice(0, 3) });
+    const phaseNames = ['flop', 'turn', 'river'];
+    const phaseHebrewMap: Record<string, string> = { flop: 'פלופ', turn: 'טרן', river: 'ריבר' };
+    const communityByPhase: Record<string, typeof game.communityCards> = {
+      flop: game.communityCards.slice(0, 3),
+      turn: game.communityCards.slice(0, 4),
+      river: game.communityCards.slice(0, 5),
+    };
+
+    // Reconstruct pot at start of each phase & the toCall the player faced
+    let runningPot = 30; // blinds
+    const results: { phase: string; cards: typeof game.communityCards; pot: number; toCall: number }[] = [];
+
+    for (const phaseName of phaseNames) {
+      if (phaseName === 'flop' && game.communityCards.length < 3) break;
+      if (phaseName === 'turn' && game.communityCards.length < 4) break;
+      if (phaseName === 'river' && game.communityCards.length < 5) break;
+
+      // Sum actions from previous phases into runningPot
+      // (preflop actions before flop, flop actions before turn, etc.)
+      const prevPhases = phaseName === 'flop' ? ['preflop'] : phaseName === 'turn' ? ['preflop', 'flop'] : ['preflop', 'flop', 'turn'];
+      
+      // Only add amounts from phases we haven't added yet
+      const alreadyCounted = results.length > 0 
+        ? (phaseName === 'turn' ? ['flop'] : phaseName === 'river' ? ['turn'] : [])
+        : prevPhases;
+      
+      for (const a of game.actions) {
+        if (alreadyCounted.includes(a.phase) && a.amount) {
+          runningPot += a.amount;
+        }
+      }
+
+      // Find the toCall the player faced in this phase
+      const phaseActions = game.actions.filter(a => a.phase === phaseName);
+      let toCall = 0;
+      // Look for bot bets/raises before the player's action in this phase
+      let playerBet = 0;
+      let botBet = 0;
+      for (const a of phaseActions) {
+        if (a.actor === 'bot' && a.amount) botBet += a.amount;
+        if (a.actor === 'player' && a.amount) playerBet += a.amount;
+      }
+      toCall = Math.max(0, botBet - playerBet);
+      // If player acted first (call/raise), use that amount
+      if (toCall === 0) {
+        const playerAction = phaseActions.find(a => a.actor === 'player' && a.action === 'call');
+        if (playerAction?.amount) toCall = playerAction.amount;
+      }
+
+      results.push({
+        phase: phaseHebrewMap[phaseName],
+        cards: communityByPhase[phaseName],
+        pot: runningPot,
+        toCall,
+      });
     }
-    if (game.communityCards.length >= 4) {
-      communitySnapshots.push({ phase: 'טרן', cards: game.communityCards.slice(0, 4) });
-    }
-    if (game.communityCards.length >= 5) {
-      communitySnapshots.push({ phase: 'ריבר', cards: game.communityCards.slice(0, 5) });
-    }
-    
-    return communitySnapshots;
+
+    return results;
   };
 
   const phaseSnapshots = getPhaseAnalysis();
