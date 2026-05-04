@@ -181,6 +181,10 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
                       ))}
                     </div>
                   </div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-[10px] text-muted-foreground">פוט: <span className="text-primary font-bold">{snapshot.pot}</span></span>
+                    <span className="text-[10px] text-muted-foreground">עלות קול: <span className="text-primary font-bold">{snapshot.toCall}</span></span>
+                  </div>
                   
                   {outsResult.draws.length > 0 ? (
                     <div className="space-y-1 mb-1.5">
