@@ -103,24 +103,25 @@ const Index = () => {
           ))}
         </div>
 
-        {/* Arena section - casino styled */}
-        <div className="rounded-lg overflow-hidden border border-secondary/30">
-          <div className="bg-secondary py-1.5 px-3 text-center">
-            <h2 className="text-sm font-heading font-bold text-primary">
+        {/* Arena section - same style as cards above */}
+        <div className="relative bg-card rounded-lg gold-border card-hover overflow-hidden">
+          <div className="absolute inset-0 bg-pattern opacity-5" />
+          <div className="relative z-10 py-2 px-3 border-b border-border">
+            <h2 className="text-sm font-heading font-bold text-primary text-center">
               🎰 זירת המשחק: בחר את הסביבה שלך
             </h2>
           </div>
-          <div className="bg-secondary/90 grid grid-cols-3 divide-x divide-primary/20">
+          <div className="relative z-10 grid grid-cols-3 divide-x divide-border">
             {arenaItems.map((item) => (
               <button
                 key={item.title}
                 onClick={() => navigate(item.route)}
-                className="py-2.5 px-2 text-center hover:bg-secondary transition-colors"
+                className="py-2.5 px-2 text-center hover:bg-muted transition-colors"
               >
                 <h4 className="text-xs font-heading font-bold text-primary mb-1">
                   {item.title}
                 </h4>
-                <p className="text-[10px] text-foreground/70 leading-tight">{item.description}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">{item.description}</p>
               </button>
             ))}
           </div>
