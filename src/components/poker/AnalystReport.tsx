@@ -5,6 +5,8 @@ import {
   getActionHebrew,
   getPhaseHebrew,
   calculateEquity,
+  calculateOuts,
+  calculatePotOdds,
 } from '@/lib/pokerEngine';
 import GlossaryText from './GlossaryText';
 import PlayingCard from './PlayingCard';
@@ -20,7 +22,29 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
   const playerEquity = calculateEquity(game.playerHand, game.communityCards);
   
   const playerActions = game.actions.filter(a => a.actor === 'player');
-  const botActions = game.actions.filter(a => a.actor === 'bot');
+
+  // Calculate outs & pot odds per phase
+  const getPhaseAnalysis = () => {
+    const phases: { phase: string; community: typeof game.communityCards; pot: number; toCall: number }[] = [];
+    
+    // Reconstruct phases from actions
+    let runningPot = 30; // initial blinds
+    const communitySnapshots: { phase: string; cards: typeof game.communityCards }[] = [];
+    
+    if (game.communityCards.length >= 3) {
+      communitySnapshots.push({ phase: 'פלופ', cards: game.communityCards.slice(0, 3) });
+    }
+    if (game.communityCards.length >= 4) {
+      communitySnapshots.push({ phase: 'טרן', cards: game.communityCards.slice(0, 4) });
+    }
+    if (game.communityCards.length >= 5) {
+      communitySnapshots.push({ phase: 'ריבר', cards: game.communityCards.slice(0, 5) });
+    }
+    
+    return communitySnapshots;
+  };
+
+  const phaseSnapshots = getPhaseAnalysis();
 
   // Analyst recommendation based on equity
   const getRecommendation = (phase: string, equity: number): string => {
@@ -28,51 +52,6 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
     if (equity > 0.45) return `בשלב ה${phase}, עם אקוויטי של ${(equity * 100).toFixed(0)}%, הפעולה הנכונה היא קול. יד סבירה ששווה לראות עוד קלפים.`;
     if (equity > 0.3) return `בשלב ה${phase}, עם אקוויטי של ${(equity * 100).toFixed(0)}%, אפשר לעשות צ'ק/קול אם המחיר נמוך, אבל להיזהר מהשקעה גדולה.`;
     return `בשלב ה${phase}, עם אקוויטי של ${(equity * 100).toFixed(0)}%, עדיף פולד. הסיכוי לזכות נמוך מדי ביחס לעלות.`;
-  };
-
-  // Combinatorial analysis
-  const getCombAnalysis = (): string => {
-    if (game.communityCards.length < 3) return 'לא מספיק קלפים קהילתיים לניתוח קומבינטורי.';
-    
-    const suits = game.communityCards.map(c => c.suit);
-    const ranks = game.communityCards.map(c => c.rank);
-    const suitCounts: Record<string, number> = {};
-    suits.forEach(s => suitCounts[s] = (suitCounts[s] || 0) + 1);
-    
-    const parts: string[] = [];
-    
-    // Flush draw check
-    const maxSuitCount = Math.max(...Object.values(suitCounts));
-    if (maxSuitCount >= 3) {
-      parts.push(`יש ${maxSuitCount} קלפים מאותו סמל על השולחן — אפשרות לפלאש. 9 אאוטס אפשריים.`);
-    }
-    
-    // Straight possibilities
-    const numericRanks = game.communityCards.map(c => {
-      const map: Record<string, number> = {'A':14,'K':13,'Q':12,'J':11,'10':10,'9':9,'8':8,'7':7,'6':6,'5':5,'4':4,'3':3,'2':2};
-      return map[c.rank];
-    }).sort((a,b) => a-b);
-    
-    const gaps = [];
-    for (let i = 1; i < numericRanks.length; i++) {
-      gaps.push(numericRanks[i] - numericRanks[i-1]);
-    }
-    if (gaps.some(g => g <= 2)) {
-      parts.push('קלפים קרובים בערכם על השולחן — אפשרות לסטרייט.');
-    }
-    
-    // Pair on board
-    const rankCounts: Record<string, number> = {};
-    ranks.forEach(r => rankCounts[r] = (rankCounts[r] || 0) + 1);
-    if (Object.values(rankCounts).some(c => c >= 2)) {
-      parts.push('יש זוג על השולחן — כל שחקן יכול לבנות פול האוס או שלישייה.');
-    }
-    
-    if (parts.length === 0) {
-      parts.push('השולחן מפוזר — אין דרואו ברורים. היתרון לשחקן עם הזוג הגבוה ביותר.');
-    }
-    
-    return parts.join(' ');
   };
 
   return (
@@ -136,14 +115,82 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
         />
       </div>
 
-      {/* Combinatorial analysis */}
+      {/* Outs & Pot Odds per phase */}
+      {phaseSnapshots.length > 0 && (
+        <div className="bg-secondary/30 rounded-lg p-3">
+          <h3 className="text-xs font-heading font-bold text-primary mb-2">🔢 אאוטס ופוט אודס — ניתוח לפי שלב</h3>
+          <div className="space-y-3">
+            {phaseSnapshots.map((snapshot, idx) => {
+              const outsResult = calculateOuts(game.playerHand, snapshot.cards);
+              const toCall = 20; // simplified: typical bet to call
+              const potOddsResult = calculatePotOdds(
+                game.pot,
+                toCall,
+                outsResult.totalOuts,
+                outsResult.cardsRemaining,
+                snapshot.cards.length
+              );
+
+              return (
+                <div key={idx} className="border-t border-primary/20 pt-2 first:border-0 first:pt-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-heading font-bold text-primary">{snapshot.phase}</span>
+                    <div className="flex gap-1">
+                      {snapshot.cards.map((c, ci) => (
+                        <PlayingCard key={ci} card={c} small />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {outsResult.draws.length > 0 ? (
+                    <div className="space-y-1 mb-1.5">
+                      {outsResult.draws.map((draw, di) => (
+                        <div key={di} className="flex items-center justify-between">
+                          <GlossaryText
+                            text={draw.name}
+                            className="text-[10px] text-foreground"
+                          />
+                          <span className="text-[10px] text-primary font-bold">{draw.outs} אאוטס</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between bg-card/50 rounded px-2 py-1">
+                        <span className="text-[10px] text-muted-foreground">סה״כ אאוטס:</span>
+                        <span className="text-[10px] text-primary font-bold">{outsResult.totalOuts}</span>
+                      </div>
+                      
+                      {/* Pot odds bar */}
+                      <div className="mt-1">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-[10px] text-muted-foreground">סיכוי שיפור:</span>
+                          <span className="text-[10px] text-primary font-bold">{potOddsResult.outsOdds.toFixed(1)}%</span>
+                        </div>
+                        <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all ${potOddsResult.isCallProfitable ? 'bg-green-500' : 'bg-red-500'}`}
+                            style={{ width: `${Math.min(potOddsResult.outsOdds, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground/70 mb-1">אין דרואו ברורים בשלב זה.</p>
+                  )}
+                  
+                  <GlossaryText
+                    text={potOddsResult.explanation}
+                    className="text-[10px] text-foreground/80"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Equity bar */}
       <div className="bg-secondary/30 rounded-lg p-3">
-        <h3 className="text-xs font-heading font-bold text-primary mb-1">🔢 ניתוח קומבינטורי</h3>
-        <GlossaryText
-          text={getCombAnalysis()}
-          className="text-xs text-foreground"
-        />
-        <div className="mt-2 flex items-center gap-2">
+        <h3 className="text-xs font-heading font-bold text-primary mb-1">📈 אקוויטי סופי</h3>
+        <div className="flex items-center gap-2">
           <span className="text-[10px] text-muted-foreground">אקוויטי שלך:</span>
           <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
             <div 
