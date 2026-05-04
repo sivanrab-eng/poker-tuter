@@ -9,6 +9,8 @@ import {
   getPhaseHebrew,
   getActionHebrew,
   calculateEquity,
+  calculateOuts,
+  calculatePotOdds,
   type GameState,
   type Action,
 } from '@/lib/pokerEngine';
@@ -180,6 +182,50 @@ const GuidedGame = () => {
             </div>
           </div>
         </div>
+
+        {/* Live Outs & Pot Odds */}
+        {game.communityCards.length >= 3 && game.phase !== 'showdown' && game.phase !== 'finished' && (() => {
+          const outsResult = calculateOuts(game.playerHand, game.communityCards);
+          const toCall = Math.max(0, game.botBet - game.playerBet);
+          const potOddsResult = calculatePotOdds(
+            game.pot,
+            toCall,
+            outsResult.totalOuts,
+            outsResult.cardsRemaining,
+            game.communityCards.length
+          );
+          return (
+            <div className="bg-secondary/40 rounded-lg p-2 gold-border">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-heading font-bold text-primary">🔢 אאוטס ופוט אודס</span>
+                <span className="text-[10px] text-muted-foreground">פוט: {game.pot} | קול: {toCall}</span>
+              </div>
+              {outsResult.draws.length > 0 ? (
+                <div className="space-y-0.5">
+                  {outsResult.draws.map((draw, di) => (
+                    <div key={di} className="flex items-center justify-between">
+                      <GlossaryText text={draw.name} className="text-[10px] text-foreground" />
+                      <span className="text-[10px] text-primary font-bold">{draw.outs} אאוטס</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[10px] text-muted-foreground">סה״כ: {outsResult.totalOuts} אאוטס</span>
+                    <span className="text-[10px] text-muted-foreground">שיפור: <span className="text-primary font-bold">{potOddsResult.outsOdds.toFixed(1)}%</span></span>
+                  </div>
+                  <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-0.5">
+                    <div
+                      className={`h-full rounded-full ${potOddsResult.isCallProfitable ? 'bg-green-500' : 'bg-red-500'}`}
+                      style={{ width: `${Math.min(potOddsResult.outsOdds, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[9px] text-foreground/70 mt-0.5">{potOddsResult.explanation}</p>
+                </div>
+              ) : (
+                <p className="text-[10px] text-muted-foreground/70">אין דרואו ברורים בשלב זה.</p>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Message */}
         <div className="bg-card rounded-lg p-2 gold-border">
