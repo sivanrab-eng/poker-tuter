@@ -47,7 +47,7 @@ const CategoryCard = ({ title, description, subtitle, image, onClick, infoConten
           </div>
           <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{description}</p>
           {subtitle && (
-            <p className="text-xs text-gold-dark font-medium mt-0.5">{subtitle}</p>
+            <p className="text-xs text-primary/70 font-medium mt-0.5">{subtitle}</p>
           )}
         </div>
       </div>
