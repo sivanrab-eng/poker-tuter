@@ -20,8 +20,8 @@ const InfoModal = ({ isOpen, onClose, title, content }: InfoModalProps) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm">
       <div className="bg-background rounded-xl p-6 max-w-sm w-full gold-border corner-accent shadow-2xl">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-heading font-bold text-forest">{title}</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-forest transition-colors">
+          <h3 className="text-xl font-heading font-bold text-primary">{title}</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-primary transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
