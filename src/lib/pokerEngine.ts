@@ -330,6 +330,135 @@ export function getBotHandEval(state: GameState): HandEval | null {
   return evaluateHand(allCards);
 }
 
+// Calculate outs — cards that improve the player's hand
+export interface OutsResult {
+  totalOuts: number;
+  draws: { name: string; outs: number; description: string }[];
+  cardsRemaining: number;
+}
+
+export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
+  if (community.length < 3 || community.length >= 5) {
+    return { totalOuts: 0, draws: [], cardsRemaining: 52 - hand.length - community.length };
+  }
+
+  const allKnown = [...hand, ...community];
+  const knownSet = new Set(allKnown.map(c => `${c.rank}${c.suit}`));
+  const cardsRemaining = 52 - allKnown.length;
+
+  // Build remaining deck
+  const remaining: Card[] = [];
+  for (const suit of SUITS) {
+    for (const rank of RANKS) {
+      if (!knownSet.has(`${rank}${suit}`)) remaining.push({ rank, suit });
+    }
+  }
+
+  const currentEval = allKnown.length >= 5 ? evaluateHand(allKnown) : { rank: 0, kickers: [], name: '' };
+  const draws: { name: string; outs: number; description: string }[] = [];
+  const outsSet = new Set<string>();
+
+  // Check flush draw
+  const suitCounts: Record<string, number> = {};
+  const handSuits = allKnown.map(c => c.suit);
+  handSuits.forEach(s => suitCounts[s] = (suitCounts[s] || 0) + 1);
+  for (const [suit, count] of Object.entries(suitCounts)) {
+    if (count === 4 && currentEval.rank < 6) {
+      const flushOuts = remaining.filter(c => c.suit === suit).length;
+      draws.push({ name: 'פלאש דרו', outs: flushOuts, description: `${flushOuts} קלפי ${suit} נותרו בחפיסה` });
+      remaining.filter(c => c.suit === suit).forEach(c => outsSet.add(`${c.rank}${c.suit}`));
+    }
+  }
+
+  // Check straight draw (open-ended and gutshot)
+  const numericRanks = [...new Set(allKnown.map(c => rankValue(c.rank)))].sort((a, b) => a - b);
+  // Check for 4-in-a-row sequences (open-ended) or gaps (gutshot)
+  for (let target = 5; target <= 14; target++) {
+    const seqRanks = [target - 4, target - 3, target - 2, target - 1, target];
+    // Handle ace-low
+    const adjRanks = seqRanks.map(r => r < 2 ? r + 13 : r > 14 ? r - 13 : r);
+    const have = adjRanks.filter(r => numericRanks.includes(r));
+    const missing = adjRanks.filter(r => !numericRanks.includes(r));
+    if (have.length === 4 && missing.length === 1 && currentEval.rank < 5) {
+      const neededRank = missing[0];
+      const straightOuts = remaining.filter(c => rankValue(c.rank) === neededRank);
+      if (straightOuts.length > 0) {
+        const isGutshot = !(missing[0] === adjRanks[0] || missing[0] === adjRanks[4]);
+        const drawName = isGutshot ? 'גאטשוט סטרייט דרו' : 'אופן-אנדד סטרייט דרו';
+        const existingDraw = draws.find(d => d.name === drawName);
+        if (!existingDraw) {
+          draws.push({ name: drawName, outs: straightOuts.length, description: `צריך ${straightOuts[0].rank} להשלמת סטרייט` });
+          straightOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
+        }
+      }
+    }
+  }
+
+  // Check for pair/trips/set improvement
+  const handRanks = hand.map(c => rankValue(c.rank));
+  const commRankCounts: Record<number, number> = {};
+  community.forEach(c => commRankCounts[rankValue(c.rank)] = (commRankCounts[rankValue(c.rank)] || 0) + 1);
+
+  if (currentEval.rank <= 1) {
+    // No pair yet — outs to pair one of our hole cards (overcards)
+    const overOuts = remaining.filter(c => handRanks.includes(rankValue(c.rank)));
+    if (overOuts.length > 0) {
+      draws.push({ name: 'זוג (אוברקארדס)', outs: overOuts.length, description: `${overOuts.length} קלפים לזוג עם קלפי היד` });
+      overOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
+    }
+  } else if (currentEval.rank === 2) {
+    // Pair — outs to trips/set
+    const pairRank = hand.find(c => {
+      const rv = rankValue(c.rank);
+      const allRanks = allKnown.map(cc => rankValue(cc.rank));
+      return allRanks.filter(r => r === rv).length >= 2;
+    });
+    if (pairRank) {
+      const setOuts = remaining.filter(c => c.rank === pairRank.rank);
+      if (setOuts.length > 0) {
+        draws.push({ name: 'שלישייה (סט)', outs: setOuts.length, description: `${setOuts.length} קלפים לשיפור לשלישייה` });
+        setOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
+      }
+    }
+  }
+
+  return { totalOuts: outsSet.size, draws, cardsRemaining };
+}
+
+// Pot odds calculation
+export interface PotOddsResult {
+  potOdds: number; // as percentage
+  outsOdds: number; // chance to hit on next card as percentage
+  outsOddsRunout: number; // chance to hit by river as percentage
+  isCallProfitable: boolean;
+  explanation: string;
+}
+
+export function calculatePotOdds(pot: number, toCall: number, outs: number, cardsRemaining: number, communityCount: number): PotOddsResult {
+  const potOdds = toCall > 0 ? (toCall / (pot + toCall)) * 100 : 0;
+  const outsOdds = cardsRemaining > 0 ? (outs / cardsRemaining) * 100 : 0;
+  const cardsTocome = communityCount === 3 ? 2 : 1;
+  const outsOddsRunout = cardsTocome === 2
+    ? (1 - ((cardsRemaining - outs) / cardsRemaining) * ((cardsRemaining - outs - 1) / (cardsRemaining - 1))) * 100
+    : outsOdds;
+  const isCallProfitable = outsOdds >= potOdds || (cardsTocome === 2 && outsOddsRunout >= potOdds);
+
+  let explanation: string;
+  if (toCall === 0) {
+    explanation = outs > 0
+      ? `אין צורך לשלם — צ'ק חינמי. יש לך ${outs} אאוטס (${outsOdds.toFixed(1)}% לשפר).`
+      : `אין צורך לשלם ואין דרואו ברורים — צ'ק.`;
+  } else if (isCallProfitable) {
+    explanation = `פוט אודס: ${potOdds.toFixed(1)}%. סיכוי לשפר: ${outsOdds.toFixed(1)}%${cardsTocome === 2 ? ` (${outsOddsRunout.toFixed(1)}% עד הריבר)` : ''}. קול רווחי! ✅`;
+  } else if (outs > 0) {
+    explanation = `פוט אודס: ${potOdds.toFixed(1)}%. סיכוי לשפר: ${outsOdds.toFixed(1)}%${cardsTocome === 2 ? ` (${outsOddsRunout.toFixed(1)}% עד הריבר)` : ''}. קול לא רווחי — שקול פולד. ❌`;
+  } else {
+    explanation = `אין אאוטס ברורים. המשך רק עם יד חזקה כרגע.`;
+  }
+
+  return { potOdds, outsOdds, outsOddsRunout, isCallProfitable, explanation };
+}
+
 // Calculate simple equity approximation
 export function calculateEquity(hand: Card[], community: Card[]): number {
   const allCards = [...hand, ...community];
