@@ -198,9 +198,26 @@ const GuidedGame = () => {
             <div className="bg-secondary/40 rounded-lg p-2 gold-border">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-heading font-bold text-primary">🔢 אאוטס ופוט אודס</span>
-                <span className="text-[10px] text-muted-foreground">פוט: {game.pot} | קול: {toCall}</span>
+                <span className="text-[10px] text-muted-foreground">פוט: {game.pot} | {toCall > 0 ? `קול: ${toCall}` : 'צ׳ק חינמי'}</span>
               </div>
-              {outsResult.draws.length > 0 ? (
+              {toCall === 0 ? (
+                <div className="space-y-0.5">
+                  {outsResult.draws.length > 0 && outsResult.draws.map((draw, di) => (
+                    <div key={di} className="flex items-center justify-between">
+                      <GlossaryText text={draw.name} className="text-[10px] text-foreground" />
+                      <span className="text-[10px] text-primary font-bold">{draw.outs} אאוטס</span>
+                    </div>
+                  ))}
+                  <div className="bg-green-500/15 rounded p-1.5 mt-1">
+                    <p className="text-[10px] text-green-400 font-bold text-center">✅ צ׳ק חינמי — תמיד נכון להמשיך!</p>
+                    {outsResult.totalOuts > 0 && (
+                      <p className="text-[9px] text-foreground/70 text-center mt-0.5">
+                        {outsResult.totalOuts} אאוטס ({potOddsResult.outsOdds.toFixed(1)}% לשפר) — ללא עלות
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : outsResult.draws.length > 0 ? (
                 <div className="space-y-0.5">
                   {outsResult.draws.map((draw, di) => (
                     <div key={di} className="flex items-center justify-between">
