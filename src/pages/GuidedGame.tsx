@@ -9,6 +9,8 @@ import {
   getPhaseHebrew,
   getActionHebrew,
   calculateEquity,
+  calculateOuts,
+  calculatePotOdds,
   type GameState,
   type Action,
 } from '@/lib/pokerEngine';
