@@ -231,9 +231,11 @@ const GuidedGame = () => {
         <div className="bg-card rounded-lg p-2 gold-border">
           <GlossaryText text={message} className="text-xs text-foreground block text-center" />
         </div>
+      </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2 mt-auto">
+      {/* Action buttons - fixed at bottom */}
+      {availableActions.length > 0 && (
+        <div className="flex gap-2 p-3 pt-2 border-t border-border">
           {availableActions.map((action) => (
             <button
               key={action}
@@ -251,7 +253,7 @@ const GuidedGame = () => {
             </button>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
