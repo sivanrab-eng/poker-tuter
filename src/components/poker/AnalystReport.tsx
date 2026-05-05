@@ -270,6 +270,22 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
                             )}
                             <p>→ כל אחוז שיפור &gt; 0% = <strong>קול/צ׳ק תמיד רווחי</strong></p>
                           </div>
+                          <div className="mt-1 px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-[9px] text-green-300/90 leading-relaxed space-y-0.5">
+                            <p>📊 <strong>דוגמה עם המספרים שלך:</strong></p>
+                            <p>הפוט עומד על <strong>{snapshot.pot}</strong> צ׳יפס ואתה לא צריך לשלם כלום (toCall=0).</p>
+                            <p>יש לך <strong>{outsResult.totalOuts}</strong> אאוטס מתוך <strong>{outsResult.cardsRemaining}</strong> קלפים שנותרו בחפיסה.</p>
+                            {outsResult.totalOuts > 0 ? (
+                              <>
+                                <p>סיכוי לשפר יד בקלף הבא: {outsResult.totalOuts}÷{outsResult.cardsRemaining} = <strong>{potOddsResult.outsOdds.toFixed(1)}%</strong>.</p>
+                                {snapshot.cards.length === 3 && (
+                                  <p>סיכוי לשפר עד הריבר (2 קלפים): ≈ <strong>{potOddsResult.outsOddsRunout.toFixed(1)}%</strong> (כלל ה-4×אאוטס ≈ {outsResult.totalOuts * 4}%).</p>
+                                )}
+                                <p>כיוון ש-Pot Odds = 0% ואילו סיכוי השיפור = {potOddsResult.outsOdds.toFixed(1)}%, <strong>תמיד משתלם להמשיך</strong>.</p>
+                              </>
+                            ) : (
+                              <p>אין אאוטס לשיפור, אבל מכיוון שאין עלות — <strong>עדיף לצ׳ק ולראות קלפים בחינם</strong>.</p>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <div className={`flex items-center gap-1 mt-1 px-2 py-1 rounded text-[10px] font-bold ${potOddsResult.isCallProfitable ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
