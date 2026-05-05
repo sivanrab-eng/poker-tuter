@@ -7,6 +7,8 @@ import Index from "./pages/Index.tsx";
 import GuidedGame from "./pages/GuidedGame.tsx";
 import TheoryLearning from "./pages/TheoryLearning.tsx";
 import LessonPage from "./pages/LessonPage.tsx";
+import HandRankingsPage from "./pages/HandRankingsPage.tsx";
+import GlossaryPage from "./pages/GlossaryPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PlaceholderPage from "./components/PlaceholderPage.tsx";
 
