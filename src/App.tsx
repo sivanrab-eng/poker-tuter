@@ -10,6 +10,7 @@ import LessonPage from "./pages/LessonPage.tsx";
 import HandRankingsPage from "./pages/HandRankingsPage.tsx";
 import GlossaryPage from "./pages/GlossaryPage.tsx";
 import VisualQuizPage from "./pages/VisualQuizPage.tsx";
+import ProbabilityPage from "./pages/ProbabilityPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PlaceholderPage from "./components/PlaceholderPage.tsx";
 
