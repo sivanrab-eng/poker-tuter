@@ -52,6 +52,8 @@ const GuidedGame = () => {
           const lastBotAction = afterBot.actions[afterBot.actions.length - 1];
           setMessage(`הבוט עשה ${getActionHebrew(lastBotAction.action)}.`);
           setBotThinking(false);
+          const result = afterBot.winner === 'player' ? 'win' : afterBot.winner === 'bot' ? 'loss' : 'tie';
+          trackHandResult(result, afterBot.pot);
           setTimeout(() => setShowReport(true), 800);
           return;
         }
