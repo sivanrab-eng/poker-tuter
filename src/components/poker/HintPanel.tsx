@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import {
   GameState,
+  Action,
   calculateEquity,
   calculateOuts,
   calculatePotOdds,
   getPhaseHebrew,
+  getActionHebrew,
 } from '@/lib/pokerEngine';
 
 interface HintPanelProps {
@@ -42,7 +44,11 @@ const VariableItem = ({ label, value, explanation }: VariableItemProps) => {
   );
 };
 
+type SimAction = 'call' | 'raise' | 'fold';
+
 const HintPanel = ({ game, onClose }: HintPanelProps) => {
+  const [selectedAction, setSelectedAction] = useState<SimAction | null>(null);
+
   const toCall = Math.max(0, game.botBet - game.playerBet);
   const equity = calculateEquity(game.playerHand, game.communityCards);
   const hasCommunity = game.communityCards.length >= 3;
@@ -61,46 +67,142 @@ const HintPanel = ({ game, onClose }: HintPanelProps) => {
       : null;
 
   const phase = getPhaseHebrew(game.phase);
+  const equityPct = (equity * 100).toFixed(0);
+  const improvePct = potOddsResult?.outsOdds.toFixed(1) ?? '—';
+  const potOddsPct = potOddsResult?.potOdds.toFixed(1) ?? '—';
+  const outsCount = outsResult?.totalOuts ?? 0;
+  const raiseSize = Math.max(toCall * 2, Math.round(game.pot * 0.6));
+
+  // Simulation for each action
+  const getActionAnalysis = (action: SimAction): { rating: 'good' | 'neutral' | 'bad'; title: string; lines: string[] } => {
+    if (action === 'fold') {
+      const invested = game.playerBet;
+      const lines = [
+        `📐 ניתוח פולד:`,
+        `• אתה מוותר על הפוט (${game.pot} צ׳יפס).`,
+        `• הפסד מצטבר ביד: ${invested} צ׳יפס שכבר השקעת.`,
+        `• אקוויטי נוכחי: ${equityPct}% — ${Number(equityPct) > 40 ? 'גבוה מדי לוותר!' : 'נמוך, ויתור סביר.'}`,
+      ];
+      if (potOddsResult) {
+        lines.push(`• פוט אודס: ${potOddsPct}% | סיכוי שיפור: ${improvePct}%`);
+        if (potOddsResult.isCallProfitable) {
+          lines.push(`\n❌ הקול רווחי כאן — פולד מבזבז הזדמנות!`);
+        } else {
+          lines.push(`\n✅ הקול לא רווחי — פולד חוסך ${toCall} צ׳יפס.`);
+        }
+      } else {
+        lines.push(Number(equityPct) < 30
+          ? `\n✅ יד חלשה — פולד חוסך כסף לטווח ארוך.`
+          : `\n⚠️ שקול צ׳ק/קול לפני שמוותר — יד לא חלשה.`
+        );
+      }
+      const rating = (potOddsResult?.isCallProfitable || Number(equityPct) > 50) ? 'bad' : Number(equityPct) < 30 ? 'good' : 'neutral';
+      return { rating, title: 'פולד — ניתוח', lines };
+    }
+
+    if (action === 'call') {
+      const newPot = game.pot + toCall;
+      const lines = [
+        `📐 ניתוח קול (${toCall === 0 ? 'צ׳ק חינמי' : `עלות: ${toCall}`}):`,
+        `• פוט אחרי קול: ${game.pot} + ${toCall} = ${newPot} צ׳יפס`,
+      ];
+      if (toCall === 0) {
+        lines.push(`• עלות: 0 — אין סיכון!`);
+        lines.push(`• אקוויטי: ${equityPct}%`);
+        lines.push(`\n✅ צ׳ק חינמי — תמיד נכון להמשיך.`);
+        if (outsCount > 0) {
+          lines.push(`   ${outsCount} אאוטס (${improvePct}% לשפר) ללא עלות.`);
+        }
+        return { rating: 'good', title: 'קול / צ׳ק — ניתוח', lines };
+      }
+      lines.push(`• פוט אודס: ${toCall} / ${newPot} = ${potOddsPct}%`);
+      lines.push(`• אאוטס: ${outsCount} | סיכוי שיפור: ${improvePct}%`);
+      lines.push(`• אקוויטי: ${equityPct}%`);
+      if (potOddsResult?.isCallProfitable) {
+        lines.push(`\n✅ קול רווחי! סיכוי שיפור (${improvePct}%) > פוט אודס (${potOddsPct}%).`);
+        lines.push(`   לאורך 100 ידיים כאלה, תרוויח בממוצע.`);
+      } else {
+        lines.push(`\n❌ קול לא רווחי: סיכוי שיפור (${improvePct}%) < פוט אודס (${potOddsPct}%).`);
+        lines.push(`   לאורך 100 ידיים כאלה, תפסיד בממוצע.`);
+      }
+      const rating = potOddsResult?.isCallProfitable ? 'good' : 'bad';
+      return { rating, title: 'קול — ניתוח', lines };
+    }
+
+    // raise
+    const newPot = game.pot + toCall + raiseSize;
+    const lines = [
+      `📐 ניתוח רייז (${raiseSize} צ׳יפס):`,
+      `• עלות: ${toCall} (קול) + ${raiseSize} (העלאה) = ${toCall + raiseSize} צ׳יפס`,
+      `• פוט אחרי רייז: ~${newPot} צ׳יפס`,
+      `• אקוויטי: ${equityPct}%`,
+    ];
+    if (outsCount > 0) {
+      lines.push(`• אאוטס: ${outsCount} | שיפור: ${improvePct}%`);
+    }
+    if (Number(equityPct) > 55) {
+      lines.push(`\n✅ רייז חזק! אקוויטי גבוה (${equityPct}%) — בנה פוט.`);
+      lines.push(`   לחץ על היריב ותגרום לו לטעויות.`);
+    } else if (Number(equityPct) > 40) {
+      lines.push(`\n⚠️ רייז כ-בלאף (סמי-בלאף): אקוויטי ${equityPct}%.`);
+      lines.push(`   יכול לעבוד אם היריב יפלד, אבל מסוכן.`);
+    } else {
+      lines.push(`\n❌ רייז מסוכן! אקוויטי נמוך (${equityPct}%).`);
+      lines.push(`   אתה משקיע ${toCall + raiseSize} צ׳יפס עם סיכוי נמוך לזכות.`);
+    }
+    const rating = Number(equityPct) > 55 ? 'good' : Number(equityPct) > 40 ? 'neutral' : 'bad';
+    return { rating, title: 'רייז — ניתוח', lines };
+  };
+
+  const analysis = selectedAction ? getActionAnalysis(selectedAction) : null;
 
   // Build recommendation
   const getRecommendation = (): { action: string; reason: string } => {
     if (toCall === 0) {
       return {
         action: 'צ׳ק / רייז',
-        reason: `אין עלות להמשיך (צ׳ק חינמי). תמיד נכון לראות עוד קלפים בחינם.\n\nאם יש לך יד חזקה (אקוויטי ${(equity * 100).toFixed(0)}%), שקול רייז כדי לבנות פוט.`,
+        reason: `אין עלות להמשיך (צ׳ק חינמי). תמיד נכון לראות עוד קלפים בחינם.\n\nאם יש לך יד חזקה (אקוויטי ${equityPct}%), שקול רייז כדי לבנות פוט.`,
       };
     }
     if (potOddsResult?.isCallProfitable) {
       return {
         action: 'קול ✅',
-        reason: `סיכוי השיפור שלך (${potOddsResult.outsOdds.toFixed(1)}%) גבוה מפוט אודס (${potOddsResult.potOdds.toFixed(1)}%).\nזה אומר שסטטיסטית, לאורך זמן, הקול ירוויח כסף.`,
+        reason: `סיכוי השיפור שלך (${improvePct}%) גבוה מפוט אודס (${potOddsPct}%).\nזה אומר שסטטיסטית, לאורך זמן, הקול ירוויח כסף.`,
       };
     }
     if (equity > 0.55) {
       return {
         action: 'רייז',
-        reason: `אקוויטי גבוה של ${(equity * 100).toFixed(0)}% — יד חזקה.\nכדאי לבנות פוט ולגרום ליריב לשלם.`,
+        reason: `אקוויטי גבוה של ${equityPct}% — יד חזקה.\nכדאי לבנות פוט ולגרום ליריב לשלם.`,
       };
     }
     if (potOddsResult && !potOddsResult.isCallProfitable) {
       return {
         action: 'פולד ❌',
-        reason: `סיכוי השיפור (${potOddsResult.outsOdds.toFixed(1)}%) נמוך מפוט אודס (${potOddsResult.potOdds.toFixed(1)}%).\nלאורך זמן, קול כאן יפסיד כסף.`,
+        reason: `סיכוי השיפור (${improvePct}%) נמוך מפוט אודס (${potOddsPct}%).\nלאורך זמן, קול כאן יפסיד כסף.`,
       };
     }
     if (equity < 0.3) {
       return {
         action: 'פולד',
-        reason: `אקוויטי נמוך (${(equity * 100).toFixed(0)}%) — סיכוי נמוך לנצח.\nעדיף לחסוך צ׳יפס למשחקים עם יד טובה יותר.`,
+        reason: `אקוויטי נמוך (${equityPct}%) — סיכוי נמוך לנצח.\nעדיף לחסוך צ׳יפס למשחקים עם יד טובה יותר.`,
       };
     }
     return {
       action: 'קול',
-      reason: `אקוויטי סביר (${(equity * 100).toFixed(0)}%). שווה לראות עוד קלפים אם המחיר סביר.`,
+      reason: `אקוויטי סביר (${equityPct}%). שווה לראות עוד קלפים אם המחיר סביר.`,
     };
   };
 
   const recommendation = getRecommendation();
+
+  const ratingColor = (r: 'good' | 'neutral' | 'bad') =>
+    r === 'good' ? 'bg-green-500/15 border-green-500/30 text-green-400' :
+    r === 'bad' ? 'bg-red-500/15 border-red-500/30 text-red-400' :
+    'bg-yellow-500/15 border-yellow-500/30 text-yellow-400';
+
+  const ratingIcon = (r: 'good' | 'neutral' | 'bad') =>
+    r === 'good' ? '✅' : r === 'bad' ? '❌' : '⚠️';
 
   return (
     <div className="bg-secondary/90 backdrop-blur-sm rounded-lg gold-border p-3 space-y-2 animate-in slide-in-from-bottom-2 duration-200">
@@ -112,44 +214,31 @@ const HintPanel = ({ game, onClose }: HintPanelProps) => {
       </div>
 
       <div className="bg-card/30 rounded-lg overflow-hidden">
-        {/* Pot */}
         <VariableItem
           label="פוט (Pot)"
           value={`${game.pot} צ׳יפס`}
           explanation={`הפוט הוא סך כל הצ׳יפס שהושקעו ביד הנוכחית.\n\n📐 חישוב: סכום כל ההימורים מכל השלבים = ${game.pot} צ׳יפס.\n\nככל שהפוט גדול יותר, כך משתלם יותר לנסות לזכות בו.`}
         />
-
-        {/* toCall */}
         <VariableItem
           label="עלות קול (To Call)"
           value={toCall === 0 ? 'חינמי ✅' : `${toCall} צ׳יפס`}
           explanation={
             toCall === 0
-              ? `אין הימור לשלם — אתה יכול לעשות צ׳ק (לבדוק) בחינם.\n\n📐 חישוב: הימור הבוט (${game.botBet}) − ההימור שלך (${game.playerBet}) = 0.\n\nתמיד נכון להמשיך כשאין עלות!`
+              ? `אין הימור לשלם — אתה יכול לעשות צ׳ק בחינם.\n\n📐 חישוב: הימור הבוט (${game.botBet}) − ההימור שלך (${game.playerBet}) = 0.\n\nתמיד נכון להמשיך כשאין עלות!`
               : `כמה צ׳יפס אתה צריך לשלם כדי להישאר ביד.\n\n📐 חישוב: הימור הבוט (${game.botBet}) − ההימור שלך (${game.playerBet}) = ${toCall} צ׳יפס.\n\nזה הסכום שצריך לבדוק אם "שווה" לשלם.`
           }
         />
-
-        {/* Pot Odds */}
         <VariableItem
           label="פוט אודס (Pot Odds)"
-          value={
-            toCall === 0
-              ? '0% (חינמי)'
-              : potOddsResult
-              ? `${potOddsResult.potOdds.toFixed(1)}%`
-              : '—'
-          }
+          value={toCall === 0 ? '0% (חינמי)' : potOddsResult ? `${potOddsPct}%` : '—'}
           explanation={
             toCall === 0
-              ? `פוט אודס = עלות הקול / (הפוט + עלות הקול)\n\n📐 חישוב: 0 / (${game.pot} + 0) = 0%\n\nכשהפוט אודס הם 0%, כל סיכוי שיפור (אפילו 1%) הופך את ההמשך לרווחי.`
+              ? `פוט אודס = עלות הקול / (הפוט + עלות הקול)\n\n📐 חישוב: 0 / (${game.pot} + 0) = 0%\n\nכשהפוט אודס הם 0%, כל סיכוי שיפור הופך את ההמשך לרווחי.`
               : potOddsResult
-              ? `פוט אודס = עלות הקול / (הפוט + עלות הקול)\n\n📐 חישוב: ${toCall} / (${game.pot} + ${toCall}) = ${potOddsResult.potOdds.toFixed(1)}%\n\nאם סיכוי השיפור שלך גבוה מ-${potOddsResult.potOdds.toFixed(1)}%, הקול רווחי.`
+              ? `פוט אודס = עלות הקול / (הפוט + עלות הקול)\n\n📐 חישוב: ${toCall} / (${game.pot} + ${toCall}) = ${potOddsPct}%\n\nאם סיכוי השיפור שלך גבוה מ-${potOddsPct}%, הקול רווחי.`
               : 'פוט אודס מחושבים מהפלופ ואילך.'
           }
         />
-
-        {/* Outs */}
         {outsResult && (
           <VariableItem
             label="אאוטס (Outs)"
@@ -160,26 +249,59 @@ const HintPanel = ({ game, onClose }: HintPanelProps) => {
             }\n\nסה״כ: ${outsResult.totalOuts} אאוטס מתוך ${outsResult.cardsRemaining} קלפים.`}
           />
         )}
-
-        {/* Improvement % */}
         {potOddsResult && outsResult && (
           <VariableItem
             label="סיכוי שיפור (%)"
-            value={`${potOddsResult.outsOdds.toFixed(1)}%${game.communityCards.length === 3 ? ` (${potOddsResult.outsOddsRunout.toFixed(1)}% עד ריבר)` : ''}`}
-            explanation={`סיכוי שיפור = אאוטס / קלפים שנותרו\n\n📐 חישוב (קלף הבא): ${outsResult.totalOuts} / ${outsResult.cardsRemaining} = ${potOddsResult.outsOdds.toFixed(1)}%${
+            value={`${improvePct}%${game.communityCards.length === 3 ? ` (${potOddsResult.outsOddsRunout.toFixed(1)}% עד ריבר)` : ''}`}
+            explanation={`סיכוי שיפור = אאוטס / קלפים שנותרו\n\n📐 חישוב (קלף הבא): ${outsResult.totalOuts} / ${outsResult.cardsRemaining} = ${improvePct}%${
               game.communityCards.length === 3
                 ? `\n\n📐 חישוב (עד ריבר — כלל ה-4×): ${outsResult.totalOuts} × 4 ≈ ${outsResult.totalOuts * 4}% (מדויק: ${potOddsResult.outsOddsRunout.toFixed(1)}%)`
                 : ''
             }\n\nככל שיש יותר אאוטס, הסיכוי לשפר יד גדל.`}
           />
         )}
-
-        {/* Equity */}
         <VariableItem
           label="אקוויטי (Equity)"
-          value={`${(equity * 100).toFixed(0)}%`}
-          explanation={`אקוויטי = הסיכוי הכולל שלך לזכות ביד.\n\n📐 ערך נוכחי: ${(equity * 100).toFixed(0)}%\n\nזה כולל גם את הסיכוי שהיד שלך כבר מנצחת עכשיו וגם את הסיכוי לשפר.\n\n• מעל 65% → רייז (בנה פוט)\n• 45-65% → קול (יד סבירה)\n• מתחת ל-30% → שקול פולד`}
+          value={`${equityPct}%`}
+          explanation={`אקוויטי = הסיכוי הכולל שלך לזכות ביד.\n\n📐 ערך נוכחי: ${equityPct}%\n\nזה כולל גם את הסיכוי שהיד שלך כבר מנצחת עכשיו וגם את הסיכוי לשפר.\n\n• מעל 65% → רייז (בנה פוט)\n• 45-65% → קול (יד סבירה)\n• מתחת ל-30% → שקול פולד`}
         />
+      </div>
+
+      {/* Action simulator */}
+      <div className="space-y-1.5">
+        <p className="text-[10px] text-muted-foreground text-center">🎯 בחר פעולה לסימולציה:</p>
+        <div className="flex gap-1.5">
+          {(['call', 'raise', 'fold'] as SimAction[]).map((act) => (
+            <button
+              key={act}
+              onClick={() => setSelectedAction(selectedAction === act ? null : act)}
+              className={`flex-1 py-1.5 rounded-md text-[11px] font-heading font-bold transition-all border ${
+                selectedAction === act
+                  ? act === 'fold'
+                    ? 'bg-accent text-accent-foreground border-accent'
+                    : act === 'raise'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-green-600 text-foreground border-green-500'
+                  : 'bg-card/40 text-foreground/70 border-primary/20 hover:border-primary/50'
+              }`}
+            >
+              {act === 'call' ? (toCall === 0 ? 'צ׳ק' : 'קול') : act === 'raise' ? 'רייז' : 'פולד'}
+            </button>
+          ))}
+        </div>
+
+        {/* Analysis result */}
+        {analysis && (
+          <div className={`rounded-lg border p-2.5 space-y-1 animate-in fade-in duration-200 ${ratingColor(analysis.rating)}`}>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">{ratingIcon(analysis.rating)}</span>
+              <span className="text-xs font-heading font-bold">{analysis.title}</span>
+            </div>
+            <div className="text-[10px] leading-relaxed whitespace-pre-line opacity-90">
+              {analysis.lines.join('\n')}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Final recommendation */}
