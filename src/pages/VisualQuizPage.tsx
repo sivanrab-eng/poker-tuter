@@ -1,9 +1,10 @@
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Trophy, RotateCcw, Zap, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Trophy, RotateCcw, Zap, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PlayingCard from "@/components/poker/PlayingCard";
 import CoachBubble from "@/components/lessons/CoachBubble";
+import { useI18n, handRankToKey } from "@/lib/i18n";
 import type { Card, Rank, Suit } from "@/lib/pokerEngine";
 
 // ---- helpers ----
@@ -54,17 +55,17 @@ function evaluate5(cards: Card[]): HandEval {
 
   if (isFlush && isStraight) {
     return values[0] === 14 && values[1] === 13
-      ? { rank: 10, name: "רויאל פלאש", kickers: values }
-      : { rank: 9, name: "סטרייט פלאש", kickers: values };
+      ? { rank: 10, name: "hand.royal_flush", kickers: values }
+      : { rank: 9, name: "hand.straight_flush", kickers: values };
   }
-  if (groups[0].count === 4) return { rank: 8, name: "קארה", kickers: [groups[0].value, groups[1].value] };
-  if (groups[0].count === 3 && groups[1].count === 2) return { rank: 7, name: "פול האוס", kickers: [groups[0].value, groups[1].value] };
-  if (isFlush) return { rank: 6, name: "פלאש", kickers: values };
-  if (isStraight) return { rank: 5, name: "סטרייט", kickers: values };
-  if (groups[0].count === 3) return { rank: 4, name: "שלישייה", kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
-  if (groups[0].count === 2 && groups[1].count === 2) return { rank: 3, name: "שני זוגות", kickers: [groups[0].value, groups[1].value, groups[2].value] };
-  if (groups[0].count === 2) return { rank: 2, name: "זוג", kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
-  return { rank: 1, name: "קלף גבוה", kickers: values };
+  if (groups[0].count === 4) return { rank: 8, name: "hand.four_of_a_kind", kickers: [groups[0].value, groups[1].value] };
+  if (groups[0].count === 3 && groups[1].count === 2) return { rank: 7, name: "hand.full_house", kickers: [groups[0].value, groups[1].value] };
+  if (isFlush) return { rank: 6, name: "hand.flush", kickers: values };
+  if (isStraight) return { rank: 5, name: "hand.straight", kickers: values };
+  if (groups[0].count === 3) return { rank: 4, name: "hand.three_of_a_kind", kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
+  if (groups[0].count === 2 && groups[1].count === 2) return { rank: 3, name: "hand.two_pair", kickers: [groups[0].value, groups[1].value, groups[2].value] };
+  if (groups[0].count === 2) return { rank: 2, name: "hand.pair", kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
+  return { rank: 1, name: "hand.high_card", kickers: values };
 }
 
 function evaluateHand(cards: Card[]): HandEval {
@@ -107,6 +108,8 @@ function generateRound(): QuizRound {
 
 const VisualQuizPage = () => {
   const navigate = useNavigate();
+  const { t, lang } = useI18n();
+  const BackArrow = lang === "he" ? ArrowRight : ArrowLeft;
   const [round, setRound] = useState<QuizRound>(generateRound);
   const [selected, setSelected] = useState<"a" | "b" | "tie" | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
@@ -119,15 +122,17 @@ const VisualQuizPage = () => {
   const coachTip = useMemo(() => {
     if (!answered) return null;
     if (isCorrect) {
-      const tips = [
-        "מצוין! העין שלך מתחדדת 🎯",
-        "נכון! אתה כבר מזהה כמו מקצוען 💪",
-        "בול! המשך ככה 🔥",
-      ];
+      const tips = [t("quiz.correct.1"), t("quiz.correct.2"), t("quiz.correct.3")];
       return tips[Math.floor(Math.random() * tips.length)];
     }
-    return `התשובה הנכונה: ${round.winner === "a" ? "שחקן א׳" : round.winner === "b" ? "שחקן ב׳" : "תיקו"}. ${round.winner !== "tie" ? `${round.winner === "a" ? round.evalA.name : round.evalB.name} מנצח ${round.winner === "a" ? round.evalB.name : round.evalA.name}.` : "שתי הידיים שוות!"}`;
-  }, [answered, isCorrect, round]);
+    const winnerLabel = round.winner === "a" ? t("quiz.wrong.player.a") : round.winner === "b" ? t("quiz.wrong.player.b") : t("quiz.wrong.tie");
+    if (round.winner === "tie") {
+      return `${t("quiz.wrong.answer")} ${winnerLabel}. ${t("quiz.both.equal")}`;
+    }
+    const winName = t(round.winner === "a" ? round.evalA.name : round.evalB.name);
+    const loseName = t(round.winner === "a" ? round.evalB.name : round.evalA.name);
+    return `${t("quiz.wrong.answer")} ${winnerLabel}. ${winName} ${t("quiz.beats")} ${loseName}.`;
+  }, [answered, isCorrect, round, t]);
 
   const handleSelect = useCallback((choice: "a" | "b" | "tie") => {
     if (answered) return;
@@ -152,26 +157,24 @@ const VisualQuizPage = () => {
   return (
     <div className="min-h-screen bg-background bg-pattern">
       <div className="max-w-lg mx-auto px-4 py-4">
-        {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <Button variant="ghost" onClick={() => navigate("/")} className="text-foreground p-2">
-            <ArrowRight className="h-5 w-5" />
+            <BackArrow className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-heading font-bold text-primary flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            מי מנצח?
+            {t("quiz.title")}
           </h1>
           <Button variant="ghost" onClick={resetGame} className="text-foreground p-2">
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Score bar */}
         <div className="flex items-center justify-center gap-4 mb-4 text-sm">
           <span className="text-primary font-bold">{score.correct}/{score.total}</span>
           {streak >= 2 && (
             <span className="text-primary flex items-center gap-1 animate-pulse">
-              🔥 רצף {streak}
+              {t("quiz.streak")} {streak}
             </span>
           )}
           {score.total > 0 && (
@@ -181,9 +184,8 @@ const VisualQuizPage = () => {
           )}
         </div>
 
-        {/* Community cards */}
         <div className="bg-card rounded-xl gold-border p-3 mb-3 corner-accent">
-          <p className="text-xs text-muted-foreground text-center mb-2">קלפים קהילתיים</p>
+          <p className="text-xs text-muted-foreground text-center mb-2">{t("quiz.community")}</p>
           <div className="flex gap-1.5 justify-center">
             {round.community.map((card, i) => (
               <PlayingCard key={i} card={card} small />
@@ -191,9 +193,7 @@ const VisualQuizPage = () => {
           </div>
         </div>
 
-        {/* Two hands */}
         <div className="grid grid-cols-2 gap-3 mb-3">
-          {/* Hand A */}
           <button
             onClick={() => handleSelect("a")}
             className={`bg-card rounded-xl p-3 transition-all border-2 ${
@@ -202,14 +202,14 @@ const VisualQuizPage = () => {
               selected === "a" ? "border-red-500 ring-2 ring-red-500/30" : "border-border opacity-60"
             }`}
           >
-            <p className="text-xs font-heading text-primary text-center mb-2">שחקן א׳</p>
+            <p className="text-xs font-heading text-primary text-center mb-2">{t("quiz.player.a")}</p>
             <div className="flex gap-1 justify-center">
               {round.handA.map((card, i) => (
                 <PlayingCard key={i} card={card} small />
               ))}
             </div>
             {answered && (
-              <p className="text-[10px] text-center mt-2 text-muted-foreground">{round.evalA.name}</p>
+              <p className="text-[10px] text-center mt-2 text-muted-foreground">{t(round.evalA.name)}</p>
             )}
             {answered && round.winner === "a" && (
               <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto mt-1" />
@@ -219,7 +219,6 @@ const VisualQuizPage = () => {
             )}
           </button>
 
-          {/* Hand B */}
           <button
             onClick={() => handleSelect("b")}
             className={`bg-card rounded-xl p-3 transition-all border-2 ${
@@ -228,14 +227,14 @@ const VisualQuizPage = () => {
               selected === "b" ? "border-red-500 ring-2 ring-red-500/30" : "border-border opacity-60"
             }`}
           >
-            <p className="text-xs font-heading text-primary text-center mb-2">שחקן ב׳</p>
+            <p className="text-xs font-heading text-primary text-center mb-2">{t("quiz.player.b")}</p>
             <div className="flex gap-1 justify-center">
               {round.handB.map((card, i) => (
                 <PlayingCard key={i} card={card} small />
               ))}
             </div>
             {answered && (
-              <p className="text-[10px] text-center mt-2 text-muted-foreground">{round.evalB.name}</p>
+              <p className="text-[10px] text-center mt-2 text-muted-foreground">{t(round.evalB.name)}</p>
             )}
             {answered && round.winner === "b" && (
               <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto mt-1" />
@@ -246,7 +245,6 @@ const VisualQuizPage = () => {
           </button>
         </div>
 
-        {/* Tie button */}
         <button
           onClick={() => handleSelect("tie")}
           className={`w-full py-2 rounded-lg text-sm font-heading transition-all border-2 mb-3 ${
@@ -255,18 +253,16 @@ const VisualQuizPage = () => {
             selected === "tie" ? "bg-card border-red-500 ring-2 ring-red-500/30 text-foreground" : "bg-card border-border opacity-60 text-foreground"
           }`}
         >
-          🤝 תיקו
+          {t("quiz.tie")}
           {answered && round.winner === "tie" && <CheckCircle2 className="inline h-4 w-4 text-green-500 mr-1" />}
           {answered && selected === "tie" && round.winner !== "tie" && <XCircle className="inline h-4 w-4 text-red-500 mr-1" />}
         </button>
 
-        {/* Coach tip */}
         {answered && coachTip && <CoachBubble tip={coachTip} />}
 
-        {/* Next button */}
         {answered && (
           <Button onClick={nextRound} className="w-full mt-3 bg-primary text-primary-foreground font-heading">
-            שאלה הבאה ←
+            {t("quiz.next")}
           </Button>
         )}
       </div>
