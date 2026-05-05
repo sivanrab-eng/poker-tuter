@@ -17,7 +17,8 @@ import {
 import PlayingCard from '@/components/poker/PlayingCard';
 import GlossaryText from '@/components/poker/GlossaryText';
 import AnalystReport from '@/components/poker/AnalystReport';
-import { ArrowRight } from 'lucide-react';
+import HintPanel from '@/components/poker/HintPanel';
+import { ArrowRight, Lightbulb } from 'lucide-react';
 
 const GuidedGame = () => {
   const navigate = useNavigate();
