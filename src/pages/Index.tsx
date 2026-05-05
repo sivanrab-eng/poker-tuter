@@ -116,7 +116,7 @@ const Index = () => {
             {arenaItems.map((item) => (
               <button
                 key={item.title}
-                onClick={() => navigate(item.route)}
+                onClick={() => { trackPracticeStart(item.title); navigate(item.route); }}
                 className="py-2.5 px-2 text-center hover:bg-muted transition-colors"
               >
                 <h4 className="text-xs font-heading font-bold text-primary mb-1">
