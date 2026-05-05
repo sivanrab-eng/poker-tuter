@@ -112,12 +112,12 @@ const Index = () => {
               🎰 זירת המשחק: בחר את הסביבה שלך
             </h2>
           </div>
-          <div className="relative z-10 grid grid-cols-3" style={{ direction: 'ltr' }}>
-            {arenaItems.map((item) => (
+          <div className="relative z-10 grid grid-cols-3">
+            {arenaItems.map((item, idx) => (
               <button
                 key={item.title}
                 onClick={() => { trackPracticeStart(item.title); navigate(item.route); }}
-                className="py-2.5 px-2 text-center hover:bg-muted transition-colors"
+                className={`py-2.5 px-2 text-center hover:bg-muted transition-colors ${idx < arenaItems.length - 1 ? 'border-l border-border' : ''}`}
               >
                 <h4 className="text-xs font-heading font-bold text-primary mb-1">
                   {item.title}
