@@ -166,14 +166,14 @@ const GuidedGame = () => {
         </div>
 
         {/* Player area */}
-        <div className="bg-secondary/30 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground mb-2">🃏 היד שלך</p>
+        <div className="bg-secondary/30 rounded-lg p-2 text-center">
+          <p className="text-[10px] text-muted-foreground mb-1">🃏 היד שלך</p>
           <div className="flex gap-1 justify-center">
             {game.playerHand.map((c, i) => (
               <PlayingCard key={i} card={c} />
             ))}
           </div>
-          <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center justify-between mt-1">
             <span className="text-[10px] text-muted-foreground">צ'יפס: {game.playerChips}</span>
             <div className="flex items-center gap-1">
               <GlossaryText 
