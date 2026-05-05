@@ -254,10 +254,17 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
                       </div>
 
                       {/* Decision */}
-                      <div className={`flex items-center gap-1 mt-1 px-2 py-1 rounded text-[10px] font-bold ${potOddsResult.isCallProfitable ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                        <span>{potOddsResult.isCallProfitable ? '✅' : '❌'}</span>
-                        <span>{potOddsResult.isCallProfitable ? 'קול רווחי' : 'קול לא רווחי'}</span>
-                      </div>
+                      {snapshot.toCall === 0 ? (
+                        <div className="flex items-center gap-1 mt-1 px-2 py-1 rounded text-[10px] font-bold bg-green-500/20 text-green-400">
+                          <span>✅</span>
+                          <span>צ׳ק חינמי — תמיד נכון להמשיך. סיכוי שיפור: {potOddsResult.outsOdds.toFixed(1)}%{snapshot.cards.length === 3 ? ` (${potOddsResult.outsOddsRunout.toFixed(1)}% עד ריבר)` : ''}.</span>
+                        </div>
+                      ) : (
+                        <div className={`flex items-center gap-1 mt-1 px-2 py-1 rounded text-[10px] font-bold ${potOddsResult.isCallProfitable ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                          <span>{potOddsResult.isCallProfitable ? '✅' : '❌'}</span>
+                          <span>{potOddsResult.isCallProfitable ? 'קול רווחי' : 'קול לא רווחי'}</span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <p className="text-[10px] text-muted-foreground/70 mb-1">אין דרואו ברורים בשלב זה.</p>
