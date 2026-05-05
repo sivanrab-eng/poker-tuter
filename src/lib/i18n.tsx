@@ -582,15 +582,25 @@ export const handRankToKey: Record<number, string> = {
   1: "hand.high_card",
 };
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Language>(() => {
+function getInitialLang(): Language {
+  try {
     const saved = localStorage.getItem("app-lang");
-    return (saved === "he" || saved === "en") ? saved : "en";
-  });
+    if (saved === "he" || saved === "en") return saved;
+  } catch { /* ignore */ }
+  return "en";
+}
+
+// Set document attributes synchronously before first render
+const initialLang = getInitialLang();
+document.documentElement.lang = initialLang;
+document.documentElement.dir = initialLang === "he" ? "rtl" : "ltr";
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Language>(initialLang);
 
   const setLang = (l: Language) => {
     setLangState(l);
-    localStorage.setItem("app-lang", l);
+    try { localStorage.setItem("app-lang", l); } catch { /* ignore */ }
   };
 
   const dir = lang === "he" ? "rtl" : "ltr";
