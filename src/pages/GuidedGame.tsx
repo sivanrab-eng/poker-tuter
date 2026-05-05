@@ -134,8 +134,8 @@ const GuidedGame = () => {
         </div>
 
         {/* Bot area */}
-        <div className="bg-secondary/30 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground mb-2">🤖 בוט</p>
+        <div className="bg-secondary/30 rounded-lg p-2 text-center">
+          <p className="text-[10px] text-muted-foreground mb-1">🤖 בוט</p>
           <div className="flex gap-1 justify-center">
             {game.botHand.map((c, i) => (
               <PlayingCard 
@@ -145,18 +145,18 @@ const GuidedGame = () => {
               />
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             צ'יפס: {game.botChips}
           </p>
           {botThinking && (
-            <p className="text-xs text-primary animate-pulse mt-1">חושב...</p>
+            <p className="text-xs text-primary animate-pulse mt-0.5">חושב...</p>
           )}
         </div>
 
         {/* Community cards */}
-        <div className="bg-secondary/50 rounded-lg p-3 gold-border">
-          <p className="text-[10px] text-muted-foreground mb-2 text-center">קלפים קהילתיים</p>
-          <div className="flex gap-1.5 justify-center min-h-[5rem] items-center">
+        <div className="bg-secondary/50 rounded-lg p-2 gold-border">
+          <p className="text-[10px] text-muted-foreground mb-1 text-center">קלפים קהילתיים</p>
+          <div className="flex gap-1.5 justify-center min-h-[3.5rem] items-center">
             {game.communityCards.length === 0 ? (
               <p className="text-xs text-muted-foreground/50">טרם נחשפו</p>
             ) : (
