@@ -120,7 +120,7 @@ const GuidedGame = () => {
       </header>
 
       {/* Game area */}
-      <div className="flex-1 flex flex-col p-3 gap-3 overflow-y-auto">
+      <div className="flex-1 flex flex-col p-2 gap-1.5 overflow-hidden">
         {/* Phase & pot info */}
         <div className="flex items-center justify-between">
           <GlossaryText 
