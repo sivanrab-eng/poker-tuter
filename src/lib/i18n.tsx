@@ -582,7 +582,18 @@ export const handRankToKey: Record<number, string> = {
   1: "hand.high_card",
 };
 
+function getUrlLang(): Language | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const l = params.get("lang");
+    if (l === "he" || l === "en") return l;
+  } catch { /* ignore */ }
+  return null;
+}
+
 function getInitialLang(): Language {
+  const urlLang = getUrlLang();
+  if (urlLang) return urlLang;
   try {
     const saved = localStorage.getItem("app-lang");
     if (saved === "he" || saved === "en") return saved;
@@ -595,12 +606,21 @@ const initialLang = getInitialLang();
 document.documentElement.lang = initialLang;
 document.documentElement.dir = initialLang === "he" ? "rtl" : "ltr";
 
+function syncLangToUrl(l: Language) {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", l);
+    window.history.replaceState(null, "", url.toString());
+  } catch { /* ignore */ }
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>(initialLang);
 
   const setLang = (l: Language) => {
     setLangState(l);
     try { localStorage.setItem("app-lang", l); } catch { /* ignore */ }
+    syncLangToUrl(l);
   };
 
   const dir = lang === "he" ? "rtl" : "ltr";
@@ -608,6 +628,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = dir;
+    syncLangToUrl(lang);
   }, [lang, dir]);
 
   const t = (key: string): string => {
