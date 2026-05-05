@@ -17,7 +17,8 @@ import {
 import PlayingCard from '@/components/poker/PlayingCard';
 import GlossaryText from '@/components/poker/GlossaryText';
 import AnalystReport from '@/components/poker/AnalystReport';
-import { ArrowRight } from 'lucide-react';
+import HintPanel from '@/components/poker/HintPanel';
+import { ArrowRight, Lightbulb } from 'lucide-react';
 
 const GuidedGame = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const GuidedGame = () => {
   const [message, setMessage] = useState('ברוכים הבאים! בחר פעולה לשלב הפרה-פלופ.');
   const [showReport, setShowReport] = useState(false);
   const [botThinking, setBotThinking] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const handleAction = useCallback((action: Action) => {
     let newState = playerAction(game, action);
@@ -248,11 +250,26 @@ const GuidedGame = () => {
         <div className="bg-card rounded-lg p-2 gold-border">
           <GlossaryText text={message} className="text-xs text-foreground block text-center" />
         </div>
+
+        {/* Hint panel */}
+        {showHint && game.phase !== 'showdown' && game.phase !== 'finished' && (
+          <HintPanel game={game} onClose={() => setShowHint(false)} />
+        )}
       </div>
 
-      {/* Action buttons - fixed at bottom */}
+      {/* Hint button + Action buttons - fixed at bottom */}
       {availableActions.length > 0 && (
-        <div className="flex gap-2 p-3 pt-2 border-t border-border">
+        <div className="border-t border-border p-3 pt-2 space-y-2">
+          {!showHint && game.phase !== 'showdown' && game.phase !== 'finished' && (
+            <button
+              onClick={() => setShowHint(true)}
+              className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg bg-primary/10 border border-primary/30 text-primary text-xs font-heading font-bold hover:bg-primary/20 transition-colors"
+            >
+              <Lightbulb size={14} />
+              <span>💡 רמז — הצג משתנים להחלטה</span>
+            </button>
+          )}
+          <div className="flex gap-2">
           {availableActions.map((action) => (
             <button
               key={action}
@@ -269,6 +286,7 @@ const GuidedGame = () => {
               {getActionHebrew(action)}
             </button>
           ))}
+          </div>
         </div>
       )}
     </div>
