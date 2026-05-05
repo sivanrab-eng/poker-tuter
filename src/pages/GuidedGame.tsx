@@ -26,6 +26,7 @@ const GuidedGame = () => {
   const [message, setMessage] = useState('ברוכים הבאים! בחר פעולה לשלב הפרה-פלופ.');
   const [showReport, setShowReport] = useState(false);
   const [botThinking, setBotThinking] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const handleAction = useCallback((action: Action) => {
     let newState = playerAction(game, action);
