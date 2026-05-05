@@ -255,9 +255,21 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
 
                       {/* Decision */}
                       {snapshot.toCall === 0 ? (
-                        <div className="flex items-center gap-1 mt-1 px-2 py-1 rounded text-[10px] font-bold bg-green-500/20 text-green-400">
-                          <span>✅</span>
-                          <span>צ׳ק חינמי — תמיד נכון להמשיך. סיכוי שיפור: {potOddsResult.outsOdds.toFixed(1)}%{snapshot.cards.length === 3 ? ` (${potOddsResult.outsOddsRunout.toFixed(1)}% עד ריבר)` : ''}.</span>
+                        <div className="mt-1 px-2 py-1.5 rounded bg-green-500/20 text-green-400 space-y-1">
+                          <div className="flex items-center gap-1 text-[10px] font-bold">
+                            <span>✅</span>
+                            <span>צ׳ק חינמי — תמיד נכון להמשיך</span>
+                          </div>
+                          <div className="text-[9px] text-green-300/80 leading-relaxed space-y-0.5">
+                            <p>📐 <strong>חישוב:</strong> Pot = {snapshot.pot}, toCall = 0</p>
+                            <p>→ Pot Odds = toCall / (Pot + toCall) = 0 / ({snapshot.pot}+0) = <strong>0%</strong></p>
+                            <p>→ אאוטס: {outsResult.totalOuts} מתוך {outsResult.cardsRemaining} קלפים</p>
+                            <p>→ סיכוי שיפור (קלף הבא): {outsResult.totalOuts}/{outsResult.cardsRemaining} = <strong>{potOddsResult.outsOdds.toFixed(1)}%</strong></p>
+                            {snapshot.cards.length === 3 && (
+                              <p>→ סיכוי שיפור (עד ריבר): ≈ <strong>{potOddsResult.outsOddsRunout.toFixed(1)}%</strong></p>
+                            )}
+                            <p>→ כל אחוז שיפור &gt; 0% = <strong>קול/צ׳ק תמיד רווחי</strong></p>
+                          </div>
                         </div>
                       ) : (
                         <div className={`flex items-center gap-1 mt-1 px-2 py-1 rounded text-[10px] font-bold ${potOddsResult.isCallProfitable ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
