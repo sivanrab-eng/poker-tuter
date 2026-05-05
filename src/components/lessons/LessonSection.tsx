@@ -1,4 +1,5 @@
 import GlossaryText from "@/components/poker/GlossaryText";
+import { useI18n } from "@/lib/i18n";
 
 interface LessonSectionProps {
   title: string;
@@ -21,12 +22,15 @@ interface ExampleBoxProps {
   children: React.ReactNode;
 }
 
-export const ExampleBox = ({ title = "דוגמה", children }: ExampleBoxProps) => (
-  <div className="bg-muted/50 border border-primary/15 rounded-lg p-3 my-2">
-    <p className="text-xs font-bold text-primary mb-1">💡 {title}</p>
-    <div className="text-sm text-foreground leading-relaxed">{children}</div>
-  </div>
-);
+export const ExampleBox = ({ title, children }: ExampleBoxProps) => {
+  const { t } = useI18n();
+  return (
+    <div className="bg-muted/50 border border-primary/15 rounded-lg p-3 my-2">
+      <p className="text-xs font-bold text-primary mb-1">💡 {title ?? t("lesson.example")}</p>
+      <div className="text-sm text-foreground leading-relaxed">{children}</div>
+    </div>
+  );
+};
 
 interface TextWithGlossaryProps {
   text: string;

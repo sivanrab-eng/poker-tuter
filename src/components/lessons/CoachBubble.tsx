@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import coachAvatar from "@/assets/coach-avatar.png";
+import { useI18n } from "@/lib/i18n";
 
 interface CoachBubbleProps {
   tip: string;
   label?: string;
 }
 
-const CoachBubble = ({ tip, label = "טיפ מהמאמן" }: CoachBubbleProps) => {
+const CoachBubble = ({ tip, label }: CoachBubbleProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useI18n();
+  const displayLabel = label ?? t("coach.label");
 
   return (
     <div className="my-3">
@@ -17,10 +20,10 @@ const CoachBubble = ({ tip, label = "טיפ מהמאמן" }: CoachBubbleProps) =
           onClick={() => setIsOpen(true)}
           className="flex items-center gap-2 bg-secondary/80 hover:bg-secondary rounded-full px-4 py-2 transition-all group w-full"
         >
-          <img src={coachAvatar} alt="מאמן" className="w-8 h-8 rounded-full flex-shrink-0" />
+          <img src={coachAvatar} alt="Coach" className="w-8 h-8 rounded-full flex-shrink-0" />
           <MessageCircle className="h-4 w-4 text-primary flex-shrink-0" />
-          <span className="text-xs text-primary font-medium">{label}</span>
-          <span className="text-[10px] text-muted-foreground mr-auto">לחצו לפתיחה</span>
+          <span className="text-xs text-primary font-medium">{displayLabel}</span>
+          <span className="text-[10px] text-muted-foreground mr-auto">{t("coach.open")}</span>
         </button>
       ) : (
         <div className="relative bg-secondary/60 border border-primary/20 rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -31,9 +34,9 @@ const CoachBubble = ({ tip, label = "טיפ מהמאמן" }: CoachBubbleProps) =
             <X className="h-4 w-4" />
           </button>
           <div className="flex items-start gap-3">
-            <img src={coachAvatar} alt="מאמן" className="w-10 h-10 rounded-full flex-shrink-0 mt-0.5" />
+            <img src={coachAvatar} alt="Coach" className="w-10 h-10 rounded-full flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-bold text-primary mb-1">{label}</p>
+              <p className="text-xs font-bold text-primary mb-1">{displayLabel}</p>
               <p className="text-sm text-foreground leading-relaxed">{tip}</p>
             </div>
           </div>
