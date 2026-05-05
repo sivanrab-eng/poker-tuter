@@ -251,11 +251,16 @@ const GuidedGame = () => {
           <GlossaryText text={message} className="text-xs text-foreground block text-center" />
         </div>
 
-        {/* Hint panel */}
-        {showHint && game.phase !== 'showdown' && game.phase !== 'finished' && (
-          <HintPanel game={game} onClose={() => setShowHint(false)} />
-        )}
       </div>
+
+      {/* Hint panel - full screen overlay */}
+      {showHint && game.phase !== 'showdown' && game.phase !== 'finished' && (
+        <div className="absolute inset-0 z-50 bg-background/95 overflow-y-auto">
+          <div className="p-3">
+            <HintPanel game={game} onClose={() => setShowHint(false)} />
+          </div>
+        </div>
+      )}
 
       {/* Hint button + Action buttons - fixed at bottom */}
       {availableActions.length > 0 && (
