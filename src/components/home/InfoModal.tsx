@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface InfoModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface InfoModalProps {
 }
 
 const InfoModal = ({ isOpen, onClose, title, content }: InfoModalProps) => {
+  const { t } = useI18n();
   if (!isOpen) return null;
 
   return (
@@ -26,19 +28,19 @@ const InfoModal = ({ isOpen, onClose, title, content }: InfoModalProps) => {
         </div>
         <div className="space-y-3 text-sm">
           <div>
-            <span className="font-bold text-primary">מה זה?</span>
+            <span className="font-bold text-primary">{t("info.what")}</span>
             <p className="text-muted-foreground mt-1">{content.what}</p>
           </div>
           <div>
-            <span className="font-bold text-primary">מה מראה?</span>
+            <span className="font-bold text-primary">{t("info.shows")}</span>
             <p className="text-muted-foreground mt-1">{content.shows}</p>
           </div>
           <div>
-            <span className="font-bold text-primary">מה בא ללמד?</span>
+            <span className="font-bold text-primary">{t("info.teaches")}</span>
             <p className="text-muted-foreground mt-1">{content.teaches}</p>
           </div>
           <div>
-            <span className="font-bold text-primary">למה הוא קיים?</span>
+            <span className="font-bold text-primary">{t("info.why")}</span>
             <p className="text-muted-foreground mt-1">{content.why}</p>
           </div>
         </div>
