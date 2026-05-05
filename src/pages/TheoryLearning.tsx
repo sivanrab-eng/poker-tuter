@@ -13,7 +13,7 @@ const subCategories = [
     description: "4 שיעורים מדורגים ללימוד יסודות הפוקר — מהחוקים הבסיסיים ועד אסטרטגיה.",
     subtitle: "מתחיל → מתקדם",
     image: theoryLessons,
-    route: "/lessons/list",
+    route: "/lessons/lesson-1",
     icon: BookOpen,
   },
   {
