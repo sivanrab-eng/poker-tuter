@@ -24,8 +24,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/lessons" element={<TheoryLearning />} />
           <Route path="/lessons/:slug" element={<LessonPage />} />
-          <Route path="/hand-rankings" element={<PlaceholderPage title="דירוג ידיים" description="כל 9 הקומבינציות מהחזק לחלש" />} />
-          <Route path="/glossary" element={<PlaceholderPage title="מילון מונחים" description="כל המושגים שצריך לדעת" />} />
+          <Route path="/hand-rankings" element={<HandRankingsPage />} />
+          <Route path="/glossary" element={<GlossaryPage />} />
           <Route path="/guided" element={<GuidedGame />} />
           <Route path="/quiz" element={<PlaceholderPage title="אימון ויזואלי" description="חידוני מי מנצח ומה לוקח מה" />} />
           <Route path="/probability" element={<PlaceholderPage title="הסתברות פוקר" description="אאוטס, כלל ה-4, Pot Odds" />} />
