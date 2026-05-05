@@ -98,7 +98,7 @@ const Index = () => {
               description={section.description}
               subtitle={section.subtitle}
               image={section.image}
-              onClick={() => navigate(section.route)}
+              onClick={() => { trackLessonStart(section.id); navigate(section.route); }}
               infoContent={section.info}
             />
           ))}
