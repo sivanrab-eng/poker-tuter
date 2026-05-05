@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackHandStart, trackHandResult } from '@/lib/analytics';
 import {
   createGame,
   playerAction,
@@ -34,6 +35,8 @@ const GuidedGame = () => {
 
     if (newState.phase === 'finished') {
       setGame(newState);
+      const result = newState.winner === 'player' ? 'win' : newState.winner === 'bot' ? 'loss' : 'tie';
+      trackHandResult(result, newState.pot);
       setTimeout(() => setShowReport(true), 800);
       return;
     }
@@ -49,6 +52,8 @@ const GuidedGame = () => {
           const lastBotAction = afterBot.actions[afterBot.actions.length - 1];
           setMessage(`הבוט עשה ${getActionHebrew(lastBotAction.action)}.`);
           setBotThinking(false);
+          const result = afterBot.winner === 'player' ? 'win' : afterBot.winner === 'bot' ? 'loss' : 'tie';
+          trackHandResult(result, afterBot.pot);
           setTimeout(() => setShowReport(true), 800);
           return;
         }
@@ -83,9 +88,11 @@ const GuidedGame = () => {
   }, [game]);
 
   const handleNewGame = () => {
-    setGame(createGame());
+    const newGame = createGame();
+    setGame(newGame);
     setShowReport(false);
     setMessage('משחק חדש! בחר פעולה לשלב הפרה-פלופ.');
+    trackHandStart();
   };
 
   const availableActions = getAvailableActions(game);

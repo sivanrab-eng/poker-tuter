@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { trackLessonStart, trackPracticeStart } from "@/lib/analytics";
 import HeroSection from "@/components/home/HeroSection";
 import CategoryCard from "@/components/home/CategoryCard";
 import theoryPyramid from "@/assets/theory-pyramid.png";
@@ -97,7 +98,7 @@ const Index = () => {
               description={section.description}
               subtitle={section.subtitle}
               image={section.image}
-              onClick={() => navigate(section.route)}
+              onClick={() => { trackLessonStart(section.id); navigate(section.route); }}
               infoContent={section.info}
             />
           ))}
@@ -115,7 +116,7 @@ const Index = () => {
             {arenaItems.map((item) => (
               <button
                 key={item.title}
-                onClick={() => navigate(item.route)}
+                onClick={() => { trackPracticeStart(item.title); navigate(item.route); }}
                 className="py-2.5 px-2 text-center hover:bg-muted transition-colors"
               >
                 <h4 className="text-xs font-heading font-bold text-primary mb-1">
