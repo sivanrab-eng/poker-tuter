@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import GuidedGame from "./pages/GuidedGame.tsx";
+import TheoryLearning from "./pages/TheoryLearning.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PlaceholderPage from "./components/PlaceholderPage.tsx";
 
@@ -18,7 +19,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/lessons" element={<PlaceholderPage title="שיעורים" description="4 שיעורים מדורגים ללימוד יסודות הפוקר" />} />
+          <Route path="/lessons" element={<TheoryLearning />} />
+          <Route path="/lessons/list" element={<PlaceholderPage title="שיעורים" description="4 שיעורים מדורגים ללימוד יסודות הפוקר" />} />
           <Route path="/hand-rankings" element={<PlaceholderPage title="דירוג ידיים" description="כל 9 הקומבינציות מהחזק לחלש" />} />
           <Route path="/glossary" element={<PlaceholderPage title="מילון מונחים" description="כל המושגים שצריך לדעת" />} />
           <Route path="/guided" element={<GuidedGame />} />
