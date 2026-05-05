@@ -286,6 +286,7 @@ const GuidedGame = () => {
               {getActionHebrew(action)}
             </button>
           ))}
+          </div>
         </div>
       )}
     </div>
