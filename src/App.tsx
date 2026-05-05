@@ -10,6 +10,7 @@ import LessonPage from "./pages/LessonPage.tsx";
 import HandRankingsPage from "./pages/HandRankingsPage.tsx";
 import GlossaryPage from "./pages/GlossaryPage.tsx";
 import VisualQuizPage from "./pages/VisualQuizPage.tsx";
+import ProbabilityPage from "./pages/ProbabilityPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PlaceholderPage from "./components/PlaceholderPage.tsx";
 
@@ -29,7 +30,7 @@ const App = () => (
           <Route path="/glossary" element={<GlossaryPage />} />
           <Route path="/guided" element={<GuidedGame />} />
           <Route path="/quiz" element={<VisualQuizPage />} />
-          <Route path="/probability" element={<PlaceholderPage title="הסתברות פוקר" description="אאוטס, כלל ה-4, Pot Odds" />} />
+          <Route path="/probability" element={<ProbabilityPage />} />
           <Route path="/practice" element={<PlaceholderPage title="תרגול חופשי" description="משחק מול בוט בלי לחץ" />} />
           <Route path="/multiplayer" element={<PlaceholderPage title="משחק לשניים" description="משחק חי מול חבר" />} />
           <Route path="/bot-battle" element={<PlaceholderPage title="קרב בוטים" description="תוקפן נגד שמרן — מי ינצח?" />} />
