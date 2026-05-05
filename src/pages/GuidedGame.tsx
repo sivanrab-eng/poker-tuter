@@ -109,7 +109,7 @@ const GuidedGame = () => {
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden relative">
       {/* Header */}
       <header className="flex items-center justify-between px-3 py-2 border-b border-border">
         <button onClick={() => navigate('/')} className="text-primary">
