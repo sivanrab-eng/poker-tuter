@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import GuidedGame from "./pages/GuidedGame.tsx";
 import TheoryLearning from "./pages/TheoryLearning.tsx";
+import LessonPage from "./pages/LessonPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PlaceholderPage from "./components/PlaceholderPage.tsx";
 
