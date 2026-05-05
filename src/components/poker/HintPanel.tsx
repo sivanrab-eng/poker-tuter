@@ -267,42 +267,125 @@ const HintPanel = ({ game, onClose }: HintPanelProps) => {
         />
       </div>
 
-      {/* Action simulator */}
-      <div className="space-y-1.5">
-        <p className="text-[10px] text-muted-foreground text-center">🎯 בחר פעולה לסימולציה:</p>
-        <div className="flex gap-1.5">
-          {(['call', 'raise', 'fold'] as SimAction[]).map((act) => (
-            <button
-              key={act}
-              onClick={() => setSelectedAction(selectedAction === act ? null : act)}
-              className={`flex-1 py-1.5 rounded-md text-[11px] font-heading font-bold transition-all border ${
-                selectedAction === act
-                  ? act === 'fold'
-                    ? 'bg-accent text-accent-foreground border-accent'
-                    : act === 'raise'
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-green-600 text-foreground border-green-500'
-                  : 'bg-card/40 text-foreground/70 border-primary/20 hover:border-primary/50'
-              }`}
-            >
-              {act === 'call' ? (toCall === 0 ? 'צ׳ק' : 'קול') : act === 'raise' ? 'רייז' : 'פולד'}
-            </button>
-          ))}
-        </div>
+      {/* Comparison table */}
+      {(() => {
+        const callAnalysis = getActionAnalysis('call');
+        const raiseAnalysis = getActionAnalysis('raise');
+        const foldAnalysis = getActionAnalysis('fold');
 
-        {/* Analysis result */}
-        {analysis && (
-          <div className={`rounded-lg border p-2.5 space-y-1 animate-in fade-in duration-200 ${ratingColor(analysis.rating)}`}>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm">{ratingIcon(analysis.rating)}</span>
-              <span className="text-xs font-heading font-bold">{analysis.title}</span>
+        const newPotCall = game.pot + toCall;
+        const raiseCost = toCall + raiseSize;
+        const newPotRaise = game.pot + raiseCost;
+
+        const callPotOdds = toCall === 0 ? '0%' : `${potOddsPct}%`;
+        const raisePotOdds = `${(raiseCost / (newPotRaise + raiseCost) * 100).toFixed(1)}%`;
+
+        return (
+          <div className="space-y-1.5">
+            <p className="text-[10px] text-muted-foreground text-center">📊 השוואת פעולות</p>
+            <div className="overflow-x-auto rounded-lg border border-primary/20">
+              <table className="w-full text-[10px]">
+                <thead>
+                  <tr className="bg-card/60 border-b border-primary/15">
+                    <th className="py-1.5 px-2 text-right text-muted-foreground font-heading">משתנה</th>
+                    <th className={`py-1.5 px-2 text-center font-heading border-x border-primary/10 ${ratingColor(callAnalysis.rating)} bg-opacity-30`}>
+                      {ratingIcon(callAnalysis.rating)} {toCall === 0 ? 'צ׳ק' : 'קול'}
+                    </th>
+                    <th className={`py-1.5 px-2 text-center font-heading border-l border-primary/10 ${ratingColor(raiseAnalysis.rating)} bg-opacity-30`}>
+                      {ratingIcon(raiseAnalysis.rating)} רייז
+                    </th>
+                    <th className={`py-1.5 px-2 text-center font-heading border-l border-primary/10 ${ratingColor(foldAnalysis.rating)} bg-opacity-30`}>
+                      {ratingIcon(foldAnalysis.rating)} פולד
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-primary/10">
+                    <td className="py-1 px-2 text-right text-primary font-bold">💰 עלות</td>
+                    <td className="py-1 px-2 text-center border-x border-primary/10">{toCall === 0 ? '0 ✅' : toCall}</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10">{raiseCost}</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10">0</td>
+                  </tr>
+                  <tr className="border-b border-primary/10 bg-card/20">
+                    <td className="py-1 px-2 text-right text-primary font-bold">🏦 פוט אחרי</td>
+                    <td className="py-1 px-2 text-center border-x border-primary/10">{newPotCall}</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10">~{newPotRaise}</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
+                  </tr>
+                  <tr className="border-b border-primary/10">
+                    <td className="py-1 px-2 text-right text-primary font-bold">📐 Pot Odds</td>
+                    <td className="py-1 px-2 text-center border-x border-primary/10">{callPotOdds}</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10">{raisePotOdds}</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
+                  </tr>
+                  <tr className="border-b border-primary/10 bg-card/20">
+                    <td className="py-1 px-2 text-right text-primary font-bold">📈 Equity</td>
+                    <td className="py-1 px-2 text-center border-x border-primary/10">{equityPct}%</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10">{equityPct}%</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">0%</td>
+                  </tr>
+                  <tr className="border-b border-primary/10">
+                    <td className="py-1 px-2 text-right text-primary font-bold">🎯 אאוטס</td>
+                    <td className="py-1 px-2 text-center border-x border-primary/10">{outsCount}</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10">{outsCount}</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
+                  </tr>
+                  <tr className="border-b border-primary/10 bg-card/20">
+                    <td className="py-1 px-2 text-right text-primary font-bold">📊 שיפור %</td>
+                    <td className="py-1 px-2 text-center border-x border-primary/10">{improvePct}%</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10">{improvePct}%</td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1 px-2 text-right text-primary font-bold">⚠️ סיכון</td>
+                    <td className={`py-1 px-2 text-center border-x border-primary/10 font-bold ${toCall === 0 ? 'text-green-400' : toCall <= game.pot * 0.3 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {toCall === 0 ? 'אפס' : toCall <= game.pot * 0.3 ? 'נמוך' : 'בינוני'}
+                    </td>
+                    <td className={`py-1 px-2 text-center border-l border-primary/10 font-bold ${Number(equityPct) > 55 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {Number(equityPct) > 55 ? 'בינוני' : 'גבוה'}
+                    </td>
+                    <td className="py-1 px-2 text-center border-l border-primary/10 font-bold text-green-400">
+                      אפס
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div className="text-[10px] leading-relaxed whitespace-pre-line opacity-90">
-              {analysis.lines.join('\n')}
+
+            {/* Expandable details per action */}
+            <div className="flex gap-1.5">
+              {(['call', 'raise', 'fold'] as SimAction[]).map((act) => {
+                const a = act === 'call' ? callAnalysis : act === 'raise' ? raiseAnalysis : foldAnalysis;
+                return (
+                  <button
+                    key={act}
+                    onClick={() => setSelectedAction(selectedAction === act ? null : act)}
+                    className={`flex-1 py-1 rounded-md text-[10px] font-heading font-bold transition-all border ${
+                      selectedAction === act
+                        ? ratingColor(a.rating)
+                        : 'bg-card/40 text-foreground/70 border-primary/20 hover:border-primary/50'
+                    }`}
+                  >
+                    {act === 'call' ? (toCall === 0 ? 'פירוט צ׳ק' : 'פירוט קול') : act === 'raise' ? 'פירוט רייז' : 'פירוט פולד'}
+                  </button>
+                );
+              })}
             </div>
+
+            {analysis && (
+              <div className={`rounded-lg border p-2.5 space-y-1 animate-in fade-in duration-200 ${ratingColor(analysis.rating)}`}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">{ratingIcon(analysis.rating)}</span>
+                  <span className="text-xs font-heading font-bold">{analysis.title}</span>
+                </div>
+                <div className="text-[10px] leading-relaxed whitespace-pre-line opacity-90">
+                  {analysis.lines.join('\n')}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Final recommendation */}
       <div className={`rounded-lg p-2 ${
