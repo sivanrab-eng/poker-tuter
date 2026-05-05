@@ -35,6 +35,8 @@ const GuidedGame = () => {
 
     if (newState.phase === 'finished') {
       setGame(newState);
+      const result = newState.winner === 'player' ? 'win' : newState.winner === 'bot' ? 'loss' : 'tie';
+      trackHandResult(result, newState.pot);
       setTimeout(() => setShowReport(true), 800);
       return;
     }
