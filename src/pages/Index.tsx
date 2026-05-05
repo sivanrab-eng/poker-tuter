@@ -112,7 +112,7 @@ const Index = () => {
               🎰 זירת המשחק: בחר את הסביבה שלך
             </h2>
           </div>
-          <div className="relative z-10 grid grid-cols-3 divide-x divide-border">
+          <div className="relative z-10 grid grid-cols-3" style={{ direction: 'ltr' }}>
             {arenaItems.map((item) => (
               <button
                 key={item.title}
