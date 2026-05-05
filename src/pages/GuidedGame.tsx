@@ -84,9 +84,11 @@ const GuidedGame = () => {
   }, [game]);
 
   const handleNewGame = () => {
-    setGame(createGame());
+    const newGame = createGame();
+    setGame(newGame);
     setShowReport(false);
     setMessage('משחק חדש! בחר פעולה לשלב הפרה-פלופ.');
+    trackHandStart();
   };
 
   const availableActions = getAvailableActions(game);
