@@ -631,6 +631,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     syncLangToUrl(lang);
   }, [lang, dir]);
 
+  // Sync lang state when user navigates back/forward
+  useEffect(() => {
+    const onPopState = () => {
+      const urlLang = getUrlLang();
+      if (urlLang && urlLang !== lang) {
+        setLang(urlLang);
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [lang]);
+
   const t = (key: string): string => {
     return translations[lang][key] ?? translations["en"][key] ?? key;
   };
