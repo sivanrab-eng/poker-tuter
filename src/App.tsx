@@ -28,7 +28,7 @@ const App = () => (
           <Route path="/hand-rankings" element={<HandRankingsPage />} />
           <Route path="/glossary" element={<GlossaryPage />} />
           <Route path="/guided" element={<GuidedGame />} />
-          <Route path="/quiz" element={<PlaceholderPage title="אימון ויזואלי" description="חידוני מי מנצח ומה לוקח מה" />} />
+          <Route path="/quiz" element={<VisualQuizPage />} />
           <Route path="/probability" element={<PlaceholderPage title="הסתברות פוקר" description="אאוטס, כלל ה-4, Pot Odds" />} />
           <Route path="/practice" element={<PlaceholderPage title="תרגול חופשי" description="משחק מול בוט בלי לחץ" />} />
           <Route path="/multiplayer" element={<PlaceholderPage title="משחק לשניים" description="משחק חי מול חבר" />} />
