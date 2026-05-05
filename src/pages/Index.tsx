@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { trackLessonStart, trackPracticeStart } from "@/lib/analytics";
 import HeroSection from "@/components/home/HeroSection";
 import CategoryCard from "@/components/home/CategoryCard";
 import theoryPyramid from "@/assets/theory-pyramid.png";
