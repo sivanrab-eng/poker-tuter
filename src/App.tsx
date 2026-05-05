@@ -21,7 +21,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/lessons" element={<TheoryLearning />} />
-          <Route path="/lessons/list" element={<PlaceholderPage title="שיעורים" description="4 שיעורים מדורגים ללימוד יסודות הפוקר" />} />
+          <Route path="/lessons/:slug" element={<LessonPage />} />
           <Route path="/hand-rankings" element={<PlaceholderPage title="דירוג ידיים" description="כל 9 הקומבינציות מהחזק לחלש" />} />
           <Route path="/glossary" element={<PlaceholderPage title="מילון מונחים" description="כל המושגים שצריך לדעת" />} />
           <Route path="/guided" element={<GuidedGame />} />
