@@ -106,8 +106,8 @@ const handRankings: HandRank[] = [
 ];
 
 const suitColor = (card: string) => {
-  if (card.includes("♥") || card.includes("♦")) return "text-accent";
-  return "text-foreground";
+  if (card.includes("♥") || card.includes("♦")) return "text-red-600";
+  return "text-gray-900";
 };
 
 const HandRankingsPage = () => {
