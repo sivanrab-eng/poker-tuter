@@ -299,7 +299,7 @@ const ProbabilityPage = () => {
                 </Button>
               </div>
             ) : (
-              <p className="text-sm text-foreground text-center">{scenario.outs} אאוטס {step !== "outs" && "✓"}</p>
+              <p className="text-sm text-foreground text-center">{scenario.outs} אאוטס ✓</p>
             )}
           </div>
 
