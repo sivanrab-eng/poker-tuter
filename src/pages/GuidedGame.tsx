@@ -109,7 +109,7 @@ const GuidedGame = () => {
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden relative">
       {/* Header */}
       <header className="flex items-center justify-between px-3 py-2 border-b border-border">
         <button onClick={() => navigate('/')} className="text-primary">
@@ -120,7 +120,7 @@ const GuidedGame = () => {
       </header>
 
       {/* Game area */}
-      <div className="flex-1 flex flex-col p-3 gap-3 overflow-y-auto">
+      <div className="flex-1 flex flex-col p-2 gap-1.5 overflow-hidden">
         {/* Phase & pot info */}
         <div className="flex items-center justify-between">
           <GlossaryText 
@@ -134,8 +134,8 @@ const GuidedGame = () => {
         </div>
 
         {/* Bot area */}
-        <div className="bg-secondary/30 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground mb-2">🤖 בוט</p>
+        <div className="bg-secondary/30 rounded-lg p-2 text-center">
+          <p className="text-[10px] text-muted-foreground mb-1">🤖 בוט</p>
           <div className="flex gap-1 justify-center">
             {game.botHand.map((c, i) => (
               <PlayingCard 
@@ -145,18 +145,18 @@ const GuidedGame = () => {
               />
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             צ'יפס: {game.botChips}
           </p>
           {botThinking && (
-            <p className="text-xs text-primary animate-pulse mt-1">חושב...</p>
+            <p className="text-xs text-primary animate-pulse mt-0.5">חושב...</p>
           )}
         </div>
 
         {/* Community cards */}
-        <div className="bg-secondary/50 rounded-lg p-3 gold-border">
-          <p className="text-[10px] text-muted-foreground mb-2 text-center">קלפים קהילתיים</p>
-          <div className="flex gap-1.5 justify-center min-h-[5rem] items-center">
+        <div className="bg-secondary/50 rounded-lg p-2 gold-border">
+          <p className="text-[10px] text-muted-foreground mb-1 text-center">קלפים קהילתיים</p>
+          <div className="flex gap-1.5 justify-center min-h-[3.5rem] items-center">
             {game.communityCards.length === 0 ? (
               <p className="text-xs text-muted-foreground/50">טרם נחשפו</p>
             ) : (
@@ -166,14 +166,14 @@ const GuidedGame = () => {
         </div>
 
         {/* Player area */}
-        <div className="bg-secondary/30 rounded-lg p-3 text-center">
-          <p className="text-[10px] text-muted-foreground mb-2">🃏 היד שלך</p>
+        <div className="bg-secondary/30 rounded-lg p-2 text-center">
+          <p className="text-[10px] text-muted-foreground mb-1">🃏 היד שלך</p>
           <div className="flex gap-1 justify-center">
             {game.playerHand.map((c, i) => (
               <PlayingCard key={i} card={c} />
             ))}
           </div>
-          <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center justify-between mt-1">
             <span className="text-[10px] text-muted-foreground">צ'יפס: {game.playerChips}</span>
             <div className="flex items-center gap-1">
               <GlossaryText 
@@ -251,11 +251,16 @@ const GuidedGame = () => {
           <GlossaryText text={message} className="text-xs text-foreground block text-center" />
         </div>
 
-        {/* Hint panel */}
-        {showHint && game.phase !== 'showdown' && game.phase !== 'finished' && (
-          <HintPanel game={game} onClose={() => setShowHint(false)} />
-        )}
       </div>
+
+      {/* Hint panel - full screen overlay */}
+      {showHint && game.phase !== 'showdown' && game.phase !== 'finished' && (
+        <div className="absolute inset-0 z-50 bg-background/95 overflow-y-auto">
+          <div className="p-3">
+            <HintPanel game={game} onClose={() => setShowHint(false)} />
+          </div>
+        </div>
+      )}
 
       {/* Hint button + Action buttons - fixed at bottom */}
       {availableActions.length > 0 && (
