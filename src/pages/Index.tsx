@@ -105,24 +105,24 @@ const Index = () => {
           ))}
         </div>
 
-        <div className="relative bg-card rounded-lg gold-border card-hover overflow-hidden">
-          <div className="absolute inset-0 bg-pattern opacity-5" />
+        <div className="relative bg-card rounded-lg gold-border card-hover overflow-visible">
+          <div className="absolute inset-0 bg-pattern opacity-5 rounded-lg" />
           <div className="relative z-10 py-2 px-3 border-b border-border">
             <h2 className="text-sm font-heading font-bold text-primary text-center">
               {t("arena.title")}
             </h2>
           </div>
-          <div className="relative z-10 grid grid-cols-3">
-            {arenaItems.map((item, idx) => (
+          <div className="relative z-10 grid grid-cols-3 divide-x divide-border">
+            {arenaItems.map((item) => (
               <button
                 key={item.title}
                 onClick={() => { trackPracticeStart(item.title); navigate(item.route); }}
-                className={`py-2.5 px-2 text-center hover:bg-muted transition-colors ${idx < arenaItems.length - 1 ? 'border-l border-border' : ''}`}
+                className="py-2.5 px-1.5 text-center hover:bg-muted transition-colors"
               >
-                <h4 className="text-xs font-heading font-bold text-primary mb-1">
+                <h4 className="text-[11px] font-heading font-bold text-primary mb-1 leading-tight">
                   {item.title}
                 </h4>
-                <p className="text-[10px] text-muted-foreground leading-tight">{item.description}</p>
+                <p className="text-[9px] text-muted-foreground leading-tight break-words">{item.description}</p>
               </button>
             ))}
           </div>
