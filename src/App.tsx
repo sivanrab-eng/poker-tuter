@@ -14,6 +14,7 @@ import VisualQuizPage from "./pages/VisualQuizPage.tsx";
 import ProbabilityPage from "./pages/ProbabilityPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import BotBattle from "./pages/BotBattle.tsx";
+import TwoPlayer from "./pages/TwoPlayer.tsx";
 import PlaceholderPage from "./components/PlaceholderPage.tsx";
 import { useI18n } from "@/lib/i18n";
 
@@ -32,7 +33,7 @@ const AppRoutes = () => {
       <Route path="/quiz" element={<VisualQuizPage />} />
       <Route path="/probability" element={<ProbabilityPage />} />
       <Route path="/practice" element={<PlaceholderPage title={t("placeholder.free.title")} description={t("placeholder.free.desc")} />} />
-      <Route path="/multiplayer" element={<PlaceholderPage title={t("placeholder.multi.title")} description={t("placeholder.multi.desc")} />} />
+      <Route path="/multiplayer" element={<TwoPlayer />} />
       <Route path="/bot-battle" element={<BotBattle />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
