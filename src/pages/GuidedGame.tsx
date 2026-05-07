@@ -302,6 +302,9 @@ const GuidedGame = () => {
           </div>
         </div>
       )}
+
+      {/* AI Coach Chat */}
+      <AiCoachChat game={game} />
     </div>
   );
 };
