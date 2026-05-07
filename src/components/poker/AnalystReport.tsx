@@ -133,50 +133,52 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
         </div>
       )}
 
-      {/* What I did */}
+      {/* Chronological action timeline */}
       <div className="bg-secondary/30 rounded-lg p-3">
-        <h3 className="text-xs font-heading font-bold text-primary mb-1">🎯 מה עשית</h3>
-        <div className="space-y-1">
-          {playerActions.map((a, i) => (
-            <GlossaryText
-              key={i}
-              text={`${getPhaseHebrew(a.phase)}: ${getActionHebrew(a.action)}${a.amount ? ` (${a.amount})` : ''}`}
-              className="text-xs text-foreground block"
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* What the bot did */}
-      <div className="bg-secondary/30 rounded-lg p-3">
-        <h3 className="text-xs font-heading font-bold text-primary mb-1">🤖 מה הבוט עשה</h3>
-        <div className="space-y-1.5">
+        <h3 className="text-xs font-heading font-bold text-primary mb-2">📜 רצף היד</h3>
+        <div className="space-y-0.5">
           {(() => {
-            const botActions = game.actions.filter(a => a.actor === 'bot');
+            let runPot = 30; // blinds
             const phases = ['preflop', 'flop', 'turn', 'river', 'showdown'] as const;
-            const winPhase = game.actions.length > 0 ? game.actions[game.actions.length - 1].phase : game.phase;
-            return phases.map(phase => {
-              const phaseBot = botActions.filter(a => a.phase === phase);
-              if (phaseBot.length === 0) return null;
-              // Calculate to-call for the bot in this phase
-              const phaseAll = game.actions.filter(a => a.phase === phase);
-              let playerBetInPhase = 0;
-              let botBetInPhase = 0;
-              for (const a of phaseAll) {
-                if (a.actor === 'player' && a.amount) playerBetInPhase += a.amount;
-                if (a.actor === 'bot' && a.amount) botBetInPhase += a.amount;
+            const rows: React.ReactNode[] = [];
+            let prevPhase = '';
+
+            for (const a of game.actions) {
+              // Phase divider
+              if (a.phase !== prevPhase) {
+                if (prevPhase !== '') {
+                  rows.push(<div key={`div-${a.phase}`} className="border-t border-primary/10 my-1" />);
+                }
+                rows.push(
+                  <p key={`hdr-${a.phase}`} className="text-[10px] font-heading font-bold text-primary/70 mb-0.5">
+                    {getPhaseHebrew(a.phase)}
+                  </p>
+                );
+                prevPhase = a.phase;
               }
-              const toCallForBot = Math.max(0, playerBetInPhase - botBetInPhase + (phaseBot.reduce((s, a) => s + (a.amount || 0), 0)));
-              // Show each bot action
-              return phaseBot.map((a, i) => (
-                <div key={`${phase}-${i}`} className="flex items-center justify-between text-xs">
-                  <GlossaryText
-                    text={`${getPhaseHebrew(a.phase)}: ${getActionHebrew(a.action)}${a.amount ? ` (${a.amount})` : ''}`}
-                    className="text-foreground"
-                  />
+
+              if (a.amount) runPot += a.amount;
+
+              const isPlayer = a.actor === 'player';
+              const icon = isPlayer ? '🃏' : '🤖';
+              const label = isPlayer ? 'אתה' : 'בוט';
+
+              rows.push(
+                <div
+                  key={rows.length}
+                  className={`flex items-center justify-between text-[11px] py-0.5 px-1.5 rounded ${isPlayer ? 'bg-primary/5' : 'bg-secondary/50'}`}
+                >
+                  <span className="text-foreground">
+                    {icon} <span className="font-bold">{label}</span>:{' '}
+                    <GlossaryText text={getActionHebrew(a.action)} className="inline" />
+                    {a.amount ? ` (${a.amount})` : ''}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">פוט {runPot}</span>
                 </div>
-              ));
-            });
+              );
+            }
+
+            return rows;
           })()}
         </div>
         {/* Winning phase */}
