@@ -147,6 +147,54 @@ const AnalystReport = ({ game, onNewGame }: AnalystReportProps) => {
         </div>
       </div>
 
+      {/* What the bot did */}
+      <div className="bg-secondary/30 rounded-lg p-3">
+        <h3 className="text-xs font-heading font-bold text-primary mb-1">🤖 מה הבוט עשה</h3>
+        <div className="space-y-1.5">
+          {(() => {
+            const botActions = game.actions.filter(a => a.actor === 'bot');
+            const phases = ['preflop', 'flop', 'turn', 'river', 'showdown'] as const;
+            const winPhase = game.actions.length > 0 ? game.actions[game.actions.length - 1].phase : game.phase;
+            return phases.map(phase => {
+              const phaseBot = botActions.filter(a => a.phase === phase);
+              if (phaseBot.length === 0) return null;
+              // Calculate to-call for the bot in this phase
+              const phaseAll = game.actions.filter(a => a.phase === phase);
+              let playerBetInPhase = 0;
+              let botBetInPhase = 0;
+              for (const a of phaseAll) {
+                if (a.actor === 'player' && a.amount) playerBetInPhase += a.amount;
+                if (a.actor === 'bot' && a.amount) botBetInPhase += a.amount;
+              }
+              const toCallForBot = Math.max(0, playerBetInPhase - botBetInPhase + (phaseBot.reduce((s, a) => s + (a.amount || 0), 0)));
+              // Show each bot action
+              return phaseBot.map((a, i) => (
+                <div key={`${phase}-${i}`} className="flex items-center justify-between text-xs">
+                  <GlossaryText
+                    text={`${getPhaseHebrew(a.phase)}: ${getActionHebrew(a.action)}${a.amount ? ` (${a.amount})` : ''}`}
+                    className="text-foreground"
+                  />
+                </div>
+              ));
+            });
+          })()}
+        </div>
+        {/* Winning phase */}
+        <div className="mt-2 pt-2 border-t border-primary/20">
+          <p className="text-[10px] text-muted-foreground">
+            🏁 היד הוכרעה בשלב: <span className="text-primary font-bold">{getPhaseHebrew(
+              game.actions.length > 0 ? game.actions[game.actions.length - 1].phase : game.phase
+            )}</span>
+            {game.winner === 'player' && game.actions[game.actions.length - 1]?.action === 'fold' && (
+              <span className="text-green-400"> — הבוט פילד!</span>
+            )}
+            {game.winner === 'bot' && game.actions[game.actions.length - 1]?.action === 'fold' && (
+              <span className="text-red-400"> — פילדת</span>
+            )}
+          </p>
+        </div>
+      </div>
+
       {/* What the analyst would do */}
       <div className="bg-secondary/30 rounded-lg p-3">
         <h3 className="text-xs font-heading font-bold text-primary mb-1">🧠 מה האנליסט היה עושה</h3>
