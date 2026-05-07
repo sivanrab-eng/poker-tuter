@@ -228,16 +228,18 @@ const TwoPlayer = () => {
     if (action === 'call') newPot += 20;
     if (action === 'raise') newPot += 60;
 
+    const actionField = myKey === 'p1' ? { p1_action: action } : { p2_action: action };
+
     if (action === 'fold') {
       await supabase
         .from('game_rooms')
         .update({
           stage: 'showdown',
           revealed: 5,
-          [`${myKey}_action`]: 'fold',
+          ...actionField,
           result: oppKey === 'p1' ? 'p1wins' : 'p2wins',
           pot: newPot,
-        })
+        } as any)
         .eq('room_code', roomCode);
       return;
     }
@@ -257,12 +259,12 @@ const TwoPlayer = () => {
           stage: 'showdown',
           revealed: 5,
           pot: newPot,
-          [`${myKey}_action`]: action,
+          ...actionField,
           result,
           p1_eval: p1Eval.name,
           p2_eval: p2Eval.name,
           current_turn: oppKey,
-        })
+        } as any)
         .eq('room_code', roomCode);
     } else {
       await supabase
@@ -271,9 +273,9 @@ const TwoPlayer = () => {
           stage: nextStage,
           revealed: newRevealed,
           pot: newPot,
-          [`${myKey}_action`]: action,
+          ...actionField,
           current_turn: oppKey,
-        })
+        } as any)
         .eq('room_code', roomCode);
     }
   };
