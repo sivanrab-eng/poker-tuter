@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { trackHandStart, trackHandResult } from '@/lib/analytics';
+import AiCoachChat from '@/components/poker/AiCoachChat';
 import {
   createGame,
   playerAction,
@@ -301,6 +302,9 @@ const GuidedGame = () => {
           </div>
         </div>
       )}
+
+      {/* AI Coach Chat */}
+      <AiCoachChat game={game} />
     </div>
   );
 };
