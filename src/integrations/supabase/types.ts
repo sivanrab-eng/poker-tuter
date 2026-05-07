@@ -14,7 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_rooms: {
+        Row: {
+          community: string[]
+          created_at: string
+          current_turn: string
+          deck: string[]
+          id: string
+          p1_action: string | null
+          p1_bet: number
+          p1_chips: number
+          p1_eval: string | null
+          p1_hand: string[]
+          p1_joined: boolean
+          p2_action: string | null
+          p2_bet: number
+          p2_chips: number
+          p2_eval: string | null
+          p2_hand: string[]
+          p2_joined: boolean
+          pot: number
+          result: string | null
+          revealed: number
+          room_code: string
+          stage: string
+        }
+        Insert: {
+          community?: string[]
+          created_at?: string
+          current_turn?: string
+          deck?: string[]
+          id?: string
+          p1_action?: string | null
+          p1_bet?: number
+          p1_chips?: number
+          p1_eval?: string | null
+          p1_hand?: string[]
+          p1_joined?: boolean
+          p2_action?: string | null
+          p2_bet?: number
+          p2_chips?: number
+          p2_eval?: string | null
+          p2_hand?: string[]
+          p2_joined?: boolean
+          pot?: number
+          result?: string | null
+          revealed?: number
+          room_code: string
+          stage?: string
+        }
+        Update: {
+          community?: string[]
+          created_at?: string
+          current_turn?: string
+          deck?: string[]
+          id?: string
+          p1_action?: string | null
+          p1_bet?: number
+          p1_chips?: number
+          p1_eval?: string | null
+          p1_hand?: string[]
+          p1_joined?: boolean
+          p2_action?: string | null
+          p2_bet?: number
+          p2_chips?: number
+          p2_eval?: string | null
+          p2_hand?: string[]
+          p2_joined?: boolean
+          pot?: number
+          result?: string | null
+          revealed?: number
+          room_code?: string
+          stage?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
