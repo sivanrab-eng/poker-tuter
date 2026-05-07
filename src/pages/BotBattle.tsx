@@ -23,7 +23,7 @@ type AggressionLevel = 1 | 2 | 3 | 4 | 5;
 
 const BotBattle = () => {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [aggression, setAggression] = useState<AggressionLevel>(3);
   const [started, setStarted] = useState(false);
   const [game, setGame] = useState<GameState>(createGame());
@@ -143,7 +143,7 @@ const BotBattle = () => {
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">{t('bot.aggression.label')}</p>
               <p className="text-lg font-heading font-bold text-primary">
-                {aggressionLabels[aggression][t('bot.title') === 'Bot Battle' ? 'en' : 'he']}
+                {aggressionLabels[aggression][lang]}
               </p>
             </div>
 
@@ -206,7 +206,7 @@ const BotBattle = () => {
             className="text-xs text-muted-foreground"
           />
           <span className="text-[10px] text-accent-foreground bg-accent/50 px-2 py-0.5 rounded-full">
-            {aggressionLabels[aggression][t('bot.title') === 'Bot Battle' ? 'en' : 'he']} 🤖
+            {aggressionLabels[aggression][lang]} 🤖
           </span>
           <GlossaryText
             text={`${t('guided.pot.label')} ${game.pot}`}
