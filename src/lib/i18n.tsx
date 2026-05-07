@@ -288,6 +288,22 @@ const translations: Record<Language, Record<string, string>> = {
     "scenario.oesd": "Open-Ended Straight Draw (OESD)",
     "scenario.gutshot": "Gutshot",
     "scenario.overcards": "Overcards",
+
+    // Bot Battle
+    "bot.title": "Bot Battle",
+    "bot.setup.desc": "Choose the bot's aggression level before the game starts.",
+    "bot.aggression.label": "Bot Aggression Level",
+    "bot.aggression.info": "How will the bot play?",
+    "bot.style.passive": "Rarely raises, prefers to check/call. Easy to bluff.",
+    "bot.style.balanced": "Mixes raises and calls. Standard play.",
+    "bot.style.aggressive": "Raises often, bluffs frequently. High pressure!",
+    "bot.start": "⚔️ Start Battle",
+    "bot.welcome": "Bot Battle! Choose your action.",
+    "bot.new.hand": "New hand! Choose your action.",
+    "bot.next.hand": "Next Hand ⚔️",
+    "bot.change.level": "Change Level",
+    "bot.hands": "hands",
+    "bot.wins": "wins",
   },
   he: {
     // Hero
@@ -565,6 +581,22 @@ const translations: Record<Language, Record<string, string>> = {
     "scenario.oesd": "סטרייט דרו פתוח (OESD)",
     "scenario.gutshot": "גאטשוט (Gutshot)",
     "scenario.overcards": "אוברקארדס (Overcards)",
+
+    // Bot Battle
+    "bot.title": "קרב בוטים",
+    "bot.setup.desc": "בחר את רמת האגרסיביות של הבוט לפני תחילת המשחק.",
+    "bot.aggression.label": "רמת אגרסיביות הבוט",
+    "bot.aggression.info": "איך הבוט ישחק?",
+    "bot.style.passive": "כמעט לא מרים, מעדיף צ׳ק/קול. קל לבלוף.",
+    "bot.style.balanced": "מערבב רייזים וקולים. משחק סטנדרטי.",
+    "bot.style.aggressive": "מרים הרבה, בלופים תכופים. לחץ גבוה!",
+    "bot.start": "⚔️ התחל קרב",
+    "bot.welcome": "קרב בוטים! בחר פעולה.",
+    "bot.new.hand": "יד חדשה! בחר פעולה.",
+    "bot.next.hand": "יד הבאה ⚔️",
+    "bot.change.level": "שנה רמה",
+    "bot.hands": "ידיים",
+    "bot.wins": "נצחונות",
   },
 };
 
