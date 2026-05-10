@@ -74,8 +74,11 @@ for (const route of ROUTES) {
   const url = BASE + route;
   try {
     const r = await fetchText(url);
-    const ok = r.status === 200 && isSpaHtml(r.text);
-    log(ok, `${route || "(home)"} → ${r.status}${ok ? " ו-SPA נטען" : ""}`);
+    // GitHub Pages מחזיר 404 על נתיבים לא-פיזיים אך עם תוכן 404.html (ה-SPA),
+    // והדפדפן עדיין מריץ את React Router. לכן מקבלים גם 200 וגם 404 כל עוד התוכן הוא ה-SPA.
+    const statusOk = r.status === 200 || r.status === 404;
+    const ok = statusOk && isSpaHtml(r.text);
+    log(ok, `${route || "(home)"} → ${r.status}${ok ? " (SPA נטען, React Router יטפל)" : ""}`);
     results.push({ route, status: r.status, ok });
   } catch (e) {
     log(false, `${route} → שגיאה: ${e.message}`);
