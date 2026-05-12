@@ -115,18 +115,18 @@ function evaluate5(cards: Card[]): HandEval {
   
   if (isFlush && isStraight) {
     if (values[0] === 14 && values[1] === 13) {
-      return { rank: 10, name: 'רויאל פלאש', kickers: values };
+      return { rank: 10, name: 'hand.royal_flush', kickers: values };
     }
-    return { rank: 9, name: 'סטרייט פלאש', kickers: values };
+    return { rank: 9, name: 'hand.straight_flush', kickers: values };
   }
-  if (groups[0].count === 4) return { rank: 8, name: 'קארה (Four of a Kind)', kickers: [groups[0].value, groups[1].value] };
-  if (groups[0].count === 3 && groups[1].count === 2) return { rank: 7, name: 'פול האוס', kickers: [groups[0].value, groups[1].value] };
-  if (isFlush) return { rank: 6, name: 'פלאש (Flush)', kickers: values };
-  if (isStraight) return { rank: 5, name: 'סטרייט (Straight)', kickers: values };
-  if (groups[0].count === 3) return { rank: 4, name: 'שלישייה (Three of a Kind)', kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
-  if (groups[0].count === 2 && groups[1].count === 2) return { rank: 3, name: 'זוג כפול (Two Pair)', kickers: [groups[0].value, groups[1].value, groups[2].value] };
-  if (groups[0].count === 2) return { rank: 2, name: 'זוג (Pair)', kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
-  return { rank: 1, name: 'קלף גבוה (High Card)', kickers: values };
+  if (groups[0].count === 4) return { rank: 8, name: 'hand.four_of_a_kind', kickers: [groups[0].value, groups[1].value] };
+  if (groups[0].count === 3 && groups[1].count === 2) return { rank: 7, name: 'hand.full_house', kickers: [groups[0].value, groups[1].value] };
+  if (isFlush) return { rank: 6, name: 'hand.flush', kickers: values };
+  if (isStraight) return { rank: 5, name: 'hand.straight', kickers: values };
+  if (groups[0].count === 3) return { rank: 4, name: 'hand.three_of_a_kind', kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
+  if (groups[0].count === 2 && groups[1].count === 2) return { rank: 3, name: 'hand.two_pair', kickers: [groups[0].value, groups[1].value, groups[2].value] };
+  if (groups[0].count === 2) return { rank: 2, name: 'hand.pair', kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
+  return { rank: 1, name: 'hand.high_card', kickers: values };
 }
 
 function checkStraight(values: number[]): boolean {
@@ -194,7 +194,7 @@ export function playerAction(state: GameState, action: Action): GameState {
     case 'fold':
       newState.winner = 'bot';
       newState.phase = 'finished';
-      newState.winningHandName = 'פולד של השחקן';
+      newState.winningHandName = 'engine.fold.player';
       return newState;
     case 'check':
       newState.isPlayerTurn = false;
@@ -255,7 +255,7 @@ export function botAction(state: GameState): GameState {
     case 'fold':
       newState.winner = 'player';
       newState.phase = 'finished';
-      newState.winningHandName = 'פולד של הבוט';
+      newState.winningHandName = 'engine.fold.bot';
       return newState;
     case 'check':
       break;
@@ -331,9 +331,18 @@ export function getBotHandEval(state: GameState): HandEval | null {
 }
 
 // Calculate outs — cards that improve the player's hand
+export interface DrawInfo {
+  /** Translation key, e.g. 'draw.flush' */
+  name: string;
+  outs: number;
+  /** Translation key + params for description */
+  descriptionKey: string;
+  descriptionParams: Record<string, string | number>;
+}
+
 export interface OutsResult {
   totalOuts: number;
-  draws: { name: string; outs: number; description: string }[];
+  draws: DrawInfo[];
   cardsRemaining: number;
 }
 
@@ -355,7 +364,7 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
   }
 
   const currentEval = allKnown.length >= 5 ? evaluateHand(allKnown) : { rank: 0, kickers: [], name: '' };
-  const draws: { name: string; outs: number; description: string }[] = [];
+  const draws: DrawInfo[] = [];
   const outsSet = new Set<string>();
 
   // Check flush draw
@@ -365,17 +374,20 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
   for (const [suit, count] of Object.entries(suitCounts)) {
     if (count === 4 && currentEval.rank < 6) {
       const flushOuts = remaining.filter(c => c.suit === suit).length;
-      draws.push({ name: 'פלאש דרו', outs: flushOuts, description: `${flushOuts} קלפי ${suit} נותרו בחפיסה` });
+      draws.push({
+        name: 'draw.flush',
+        outs: flushOuts,
+        descriptionKey: 'draw.desc.flush',
+        descriptionParams: { n: flushOuts, suit },
+      });
       remaining.filter(c => c.suit === suit).forEach(c => outsSet.add(`${c.rank}${c.suit}`));
     }
   }
 
   // Check straight draw (open-ended and gutshot)
   const numericRanks = [...new Set(allKnown.map(c => rankValue(c.rank)))].sort((a, b) => a - b);
-  // Check for 4-in-a-row sequences (open-ended) or gaps (gutshot)
   for (let target = 5; target <= 14; target++) {
     const seqRanks = [target - 4, target - 3, target - 2, target - 1, target];
-    // Handle ace-low
     const adjRanks = seqRanks.map(r => r < 2 ? r + 13 : r > 14 ? r - 13 : r);
     const have = adjRanks.filter(r => numericRanks.includes(r));
     const missing = adjRanks.filter(r => !numericRanks.includes(r));
@@ -384,10 +396,15 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
       const straightOuts = remaining.filter(c => rankValue(c.rank) === neededRank);
       if (straightOuts.length > 0) {
         const isGutshot = !(missing[0] === adjRanks[0] || missing[0] === adjRanks[4]);
-        const drawName = isGutshot ? 'גאטשוט סטרייט דרו' : 'אופן-אנדד סטרייט דרו';
+        const drawName = isGutshot ? 'draw.gutshot' : 'draw.oesd';
         const existingDraw = draws.find(d => d.name === drawName);
         if (!existingDraw) {
-          draws.push({ name: drawName, outs: straightOuts.length, description: `צריך ${straightOuts[0].rank} להשלמת סטרייט` });
+          draws.push({
+            name: drawName,
+            outs: straightOuts.length,
+            descriptionKey: 'draw.desc.straight',
+            descriptionParams: { rank: straightOuts[0].rank },
+          });
           straightOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
         }
       }
@@ -400,14 +417,17 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
   community.forEach(c => commRankCounts[rankValue(c.rank)] = (commRankCounts[rankValue(c.rank)] || 0) + 1);
 
   if (currentEval.rank <= 1) {
-    // No pair yet — outs to pair one of our hole cards (overcards)
     const overOuts = remaining.filter(c => handRanks.includes(rankValue(c.rank)));
     if (overOuts.length > 0) {
-      draws.push({ name: 'זוג (אוברקארדס)', outs: overOuts.length, description: `${overOuts.length} קלפים לזוג עם קלפי היד` });
+      draws.push({
+        name: 'draw.overcards',
+        outs: overOuts.length,
+        descriptionKey: 'draw.desc.overcards',
+        descriptionParams: { n: overOuts.length },
+      });
       overOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
     }
   } else if (currentEval.rank === 2) {
-    // Pair — outs to trips/set
     const pairRank = hand.find(c => {
       const rv = rankValue(c.rank);
       const allRanks = allKnown.map(cc => rankValue(cc.rank));
@@ -416,7 +436,12 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
     if (pairRank) {
       const setOuts = remaining.filter(c => c.rank === pairRank.rank);
       if (setOuts.length > 0) {
-        draws.push({ name: 'שלישייה (סט)', outs: setOuts.length, description: `${setOuts.length} קלפים לשיפור לשלישייה` });
+        draws.push({
+          name: 'draw.set',
+          outs: setOuts.length,
+          descriptionKey: 'draw.desc.set',
+          descriptionParams: { n: setOuts.length },
+        });
         setOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
       }
     }
@@ -427,10 +452,14 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
 
 // Pot odds calculation
 export interface PotOddsResult {
-  potOdds: number; // as percentage
-  outsOdds: number; // chance to hit on next card as percentage
-  outsOddsRunout: number; // chance to hit by river as percentage
+  potOdds: number;
+  outsOdds: number;
+  outsOddsRunout: number;
   isCallProfitable: boolean;
+  /** Translation key for the explanation, with params */
+  explanationKey: string;
+  explanationParams: Record<string, string>;
+  /** @deprecated Use explanationKey + explanationParams via t() instead. Kept for backwards-compat — falls back to the key. */
   explanation: string;
 }
 
@@ -443,33 +472,36 @@ export function calculatePotOdds(pot: number, toCall: number, outs: number, card
     : outsOdds;
   const isCallProfitable = outsOdds >= potOdds || (cardsTocome === 2 && outsOddsRunout >= potOdds);
 
-  let explanation: string;
+  let explanationKey: string;
+  const explanationParams: Record<string, string> = {
+    pot: potOdds.toFixed(1),
+    odds: outsOdds.toFixed(1),
+    runout: outsOddsRunout.toFixed(1),
+    outs: String(outs),
+  };
   if (toCall === 0) {
-    explanation = outs > 0
-      ? `אין צורך לשלם — צ'ק חינמי. יש לך ${outs} אאוטס (${outsOdds.toFixed(1)}% לשפר).`
-      : `אין צורך לשלם ואין דרואו ברורים — צ'ק.`;
+    explanationKey = outs > 0 ? 'engine.explain.free.outs' : 'engine.explain.free.no.outs';
   } else if (isCallProfitable) {
-    explanation = `פוט אודס: ${potOdds.toFixed(1)}%. סיכוי לשפר: ${outsOdds.toFixed(1)}%${cardsTocome === 2 ? ` (${outsOddsRunout.toFixed(1)}% עד הריבר)` : ''}. קול רווחי! ✅`;
+    explanationKey = cardsTocome === 2 ? 'engine.explain.profitable.runout' : 'engine.explain.profitable';
   } else if (outs > 0) {
-    explanation = `פוט אודס: ${potOdds.toFixed(1)}%. סיכוי לשפר: ${outsOdds.toFixed(1)}%${cardsTocome === 2 ? ` (${outsOddsRunout.toFixed(1)}% עד הריבר)` : ''}. קול לא רווחי — שקול פולד. ❌`;
+    explanationKey = cardsTocome === 2 ? 'engine.explain.unprofitable.runout' : 'engine.explain.unprofitable';
   } else {
-    explanation = `אין אאוטס ברורים. המשך רק עם יד חזקה כרגע.`;
+    explanationKey = 'engine.explain.no.outs';
   }
 
-  return { potOdds, outsOdds, outsOddsRunout, isCallProfitable, explanation };
+  return { potOdds, outsOdds, outsOddsRunout, isCallProfitable, explanationKey, explanationParams, explanation: explanationKey };
 }
 
 // Calculate simple equity approximation
 export function calculateEquity(hand: Card[], community: Card[]): number {
   const allCards = [...hand, ...community];
   if (allCards.length < 5) {
-    // Rough preflop equity based on hand
     const r1 = rankValue(hand[0].rank);
     const r2 = rankValue(hand[1].rank);
     const isPair = r1 === r2;
     const isSuited = hand[0].suit === hand[1].suit;
     const high = Math.max(r1, r2);
-    
+
     let equity = 0.3;
     if (isPair) equity = 0.5 + (high / 14) * 0.35;
     else {
@@ -479,30 +511,22 @@ export function calculateEquity(hand: Card[], community: Card[]): number {
     }
     return Math.min(0.95, Math.max(0.15, equity));
   }
-  
+
   const eval_ = evaluateHand(allCards);
   return Math.min(0.95, 0.3 + eval_.rank * 0.07);
 }
 
-export function getPhaseHebrew(phase: GamePhase): string {
-  const map: Record<GamePhase, string> = {
-    preflop: 'פרה-פלופ',
-    flop: 'פלופ',
-    turn: 'טרן',
-    river: 'ריבר',
-    showdown: 'שואדאון',
-    finished: 'סיום',
-  };
-  return map[phase];
+/** Returns the i18n key for a phase (e.g. 'phase.preflop'). */
+export function getPhaseKey(phase: GamePhase): string {
+  return `phase.${phase}`;
 }
 
-export function getActionHebrew(action: Action): string {
-  const map: Record<Action, string> = {
-    fold: 'פולד',
-    check: "צ'ק",
-    call: 'קול',
-    raise: 'רייז',
-    'all-in': 'אול-אין',
-  };
-  return map[action];
+/** Returns the i18n key for an action (e.g. 'action.fold'). */
+export function getActionKey(action: Action): string {
+  return `action.${action}`;
 }
+
+// Backwards-compat aliases — return translation keys; consumers must wrap in t().
+export const getPhaseHebrew = getPhaseKey;
+export const getActionHebrew = getActionKey;
+
