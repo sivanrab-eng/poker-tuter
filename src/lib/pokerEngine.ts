@@ -115,18 +115,18 @@ function evaluate5(cards: Card[]): HandEval {
   
   if (isFlush && isStraight) {
     if (values[0] === 14 && values[1] === 13) {
-      return { rank: 10, name: 'רויאל פלאש', kickers: values };
+      return { rank: 10, name: 'hand.royal_flush', kickers: values };
     }
-    return { rank: 9, name: 'סטרייט פלאש', kickers: values };
+    return { rank: 9, name: 'hand.straight_flush', kickers: values };
   }
-  if (groups[0].count === 4) return { rank: 8, name: 'קארה (Four of a Kind)', kickers: [groups[0].value, groups[1].value] };
-  if (groups[0].count === 3 && groups[1].count === 2) return { rank: 7, name: 'פול האוס', kickers: [groups[0].value, groups[1].value] };
-  if (isFlush) return { rank: 6, name: 'פלאש (Flush)', kickers: values };
-  if (isStraight) return { rank: 5, name: 'סטרייט (Straight)', kickers: values };
-  if (groups[0].count === 3) return { rank: 4, name: 'שלישייה (Three of a Kind)', kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
-  if (groups[0].count === 2 && groups[1].count === 2) return { rank: 3, name: 'זוג כפול (Two Pair)', kickers: [groups[0].value, groups[1].value, groups[2].value] };
-  if (groups[0].count === 2) return { rank: 2, name: 'זוג (Pair)', kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
-  return { rank: 1, name: 'קלף גבוה (High Card)', kickers: values };
+  if (groups[0].count === 4) return { rank: 8, name: 'hand.four_of_a_kind', kickers: [groups[0].value, groups[1].value] };
+  if (groups[0].count === 3 && groups[1].count === 2) return { rank: 7, name: 'hand.full_house', kickers: [groups[0].value, groups[1].value] };
+  if (isFlush) return { rank: 6, name: 'hand.flush', kickers: values };
+  if (isStraight) return { rank: 5, name: 'hand.straight', kickers: values };
+  if (groups[0].count === 3) return { rank: 4, name: 'hand.three_of_a_kind', kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
+  if (groups[0].count === 2 && groups[1].count === 2) return { rank: 3, name: 'hand.two_pair', kickers: [groups[0].value, groups[1].value, groups[2].value] };
+  if (groups[0].count === 2) return { rank: 2, name: 'hand.pair', kickers: [groups[0].value, ...groups.slice(1).map(g => g.value)] };
+  return { rank: 1, name: 'hand.high_card', kickers: values };
 }
 
 function checkStraight(values: number[]): boolean {
