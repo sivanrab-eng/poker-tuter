@@ -68,7 +68,7 @@ const BotBattle = () => {
 
   const handleAction = useCallback((action: Action) => {
     let newState = playerAction(game, action);
-    setMessage(`${t('guided.chose')} ${getActionHebrew(action)}`);
+    setMessage(`${t('guided.chose')} ${t(getActionKey(action))}`);
 
     if (newState.phase === 'finished') {
       setGame(newState);
@@ -84,7 +84,7 @@ const BotBattle = () => {
         if (afterBot.phase === 'finished') {
           setGame(afterBot);
           const lastAction = afterBot.actions[afterBot.actions.length - 1];
-          setMessage(`${t('guided.bot.did')} ${getActionHebrew(lastAction.action)}.`);
+          setMessage(`${t('guided.bot.did')} ${t(getActionKey(lastAction.action))}.`);
           setBotThinking(false);
           finishHand(afterBot);
           return;
@@ -92,14 +92,14 @@ const BotBattle = () => {
 
         if (afterBot.isPlayerTurn) {
           const lastAction = afterBot.actions[afterBot.actions.length - 1];
-          setMessage(`${t('guided.bot.did')} ${getActionHebrew(lastAction.action)}. ${t('guided.bot.your.turn')}`);
+          setMessage(`${t('guided.bot.did')} ${t(getActionKey(lastAction.action))}. ${t('guided.bot.your.turn')}`);
           setGame(afterBot);
           setBotThinking(false);
           return;
         }
 
         const lastAction = afterBot.actions[afterBot.actions.length - 1];
-        setMessage(`${t('guided.bot.did')} ${getActionHebrew(lastAction.action)}.`);
+        setMessage(`${t('guided.bot.did')} ${t(getActionKey(lastAction.action))}.`);
 
         setTimeout(() => {
           const advanced = advancePhase(afterBot);
@@ -310,7 +310,7 @@ const BotBattle = () => {
                       : 'bg-secondary text-foreground hover:bg-secondary/80 border border-primary/30'
                   }`}
               >
-                {getActionHebrew(action)}
+                {t(getActionKey(action))}
               </button>
             ))}
           </div>
