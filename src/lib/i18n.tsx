@@ -1079,6 +1079,7 @@ const translations: Record<Language, Record<string, string>> = {
     "coach.chat.placeholder": "שאל שאלה על פוקר...",
     "coach.chat.error": "❌ שגיאה, נסה שוב",
     "coach.chat.empty.community": "אין עדיין",
+  },
 };
 
 // Map hand rank number to translation key
