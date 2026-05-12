@@ -539,6 +539,19 @@ const translations: Record<Language, Record<string, string>> = {
     "two.stage.turn": "Turn",
     "two.stage.river": "River",
     "two.stage.showdown": "Showdown",
+
+    // Coach Chat
+    "coach.chat.title": "Coach — ask anything about poker",
+    "coach.chat.tooltip": "Ask the coach",
+    "coach.chat.greet1": "🎓 Hi! I'm your coach.",
+    "coach.chat.greet2": "Ask me anything about poker — strategy, rules, probability.",
+    "coach.chat.greet3": "I can see your current game and reference it!",
+    "coach.chat.suggest1": "What to do with this hand?",
+    "coach.chat.suggest2": "What are outs?",
+    "coach.chat.suggest3": "When to raise?",
+    "coach.chat.placeholder": "Ask a question about poker...",
+    "coach.chat.error": "❌ Error, try again",
+    "coach.chat.empty.community": "none yet",
   },
   he: {
     // Hero
