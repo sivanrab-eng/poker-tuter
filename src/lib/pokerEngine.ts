@@ -194,7 +194,7 @@ export function playerAction(state: GameState, action: Action): GameState {
     case 'fold':
       newState.winner = 'bot';
       newState.phase = 'finished';
-      newState.winningHandName = 'פולד של השחקן';
+      newState.winningHandName = 'engine.fold.player';
       return newState;
     case 'check':
       newState.isPlayerTurn = false;
