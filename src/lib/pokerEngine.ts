@@ -452,13 +452,15 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
 
 // Pot odds calculation
 export interface PotOddsResult {
-  potOdds: number; // as percentage
-  outsOdds: number; // chance to hit on next card as percentage
-  outsOddsRunout: number; // chance to hit by river as percentage
+  potOdds: number;
+  outsOdds: number;
+  outsOddsRunout: number;
   isCallProfitable: boolean;
   /** Translation key for the explanation, with params */
   explanationKey: string;
   explanationParams: Record<string, string>;
+  /** @deprecated Use explanationKey + explanationParams via t() instead. Kept for backwards-compat — falls back to the key. */
+  explanation: string;
 }
 
 export function calculatePotOdds(pot: number, toCall: number, outs: number, cardsRemaining: number, communityCount: number): PotOddsResult {
@@ -487,7 +489,7 @@ export function calculatePotOdds(pot: number, toCall: number, outs: number, card
     explanationKey = 'engine.explain.no.outs';
   }
 
-  return { potOdds, outsOdds, outsOddsRunout, isCallProfitable, explanationKey, explanationParams };
+  return { potOdds, outsOdds, outsOddsRunout, isCallProfitable, explanationKey, explanationParams, explanation: explanationKey };
 }
 
 // Calculate simple equity approximation
