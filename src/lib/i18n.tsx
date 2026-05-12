@@ -329,7 +329,6 @@ const translations: Record<Language, Record<string, string>> = {
     "common.cancel": "Cancel",
 
     // Guided extras
-    "guided.title": "Guided Game",
     "guided.community.label": "Community Cards",
     "guided.community.empty": "Not yet revealed",
     "guided.your.label": "Your Hand",
