@@ -2,10 +2,11 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 
 export type Language = "en" | "he";
 
+type TParams = Record<string, string | number>;
 interface I18nContextType {
   lang: Language;
   setLang: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: TParams) => string;
   dir: "ltr" | "rtl";
 }
 
