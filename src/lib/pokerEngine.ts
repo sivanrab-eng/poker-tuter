@@ -456,7 +456,9 @@ export interface PotOddsResult {
   outsOdds: number; // chance to hit on next card as percentage
   outsOddsRunout: number; // chance to hit by river as percentage
   isCallProfitable: boolean;
-  explanation: string;
+  /** Translation key for the explanation, with params */
+  explanationKey: string;
+  explanationParams: Record<string, string>;
 }
 
 export function calculatePotOdds(pot: number, toCall: number, outs: number, cardsRemaining: number, communityCount: number): PotOddsResult {
@@ -468,33 +470,36 @@ export function calculatePotOdds(pot: number, toCall: number, outs: number, card
     : outsOdds;
   const isCallProfitable = outsOdds >= potOdds || (cardsTocome === 2 && outsOddsRunout >= potOdds);
 
-  let explanation: string;
+  let explanationKey: string;
+  const explanationParams: Record<string, string> = {
+    pot: potOdds.toFixed(1),
+    odds: outsOdds.toFixed(1),
+    runout: outsOddsRunout.toFixed(1),
+    outs: String(outs),
+  };
   if (toCall === 0) {
-    explanation = outs > 0
-      ? `אין צורך לשלם — צ'ק חינמי. יש לך ${outs} אאוטס (${outsOdds.toFixed(1)}% לשפר).`
-      : `אין צורך לשלם ואין דרואו ברורים — צ'ק.`;
+    explanationKey = outs > 0 ? 'engine.explain.free.outs' : 'engine.explain.free.no.outs';
   } else if (isCallProfitable) {
-    explanation = `פוט אודס: ${potOdds.toFixed(1)}%. סיכוי לשפר: ${outsOdds.toFixed(1)}%${cardsTocome === 2 ? ` (${outsOddsRunout.toFixed(1)}% עד הריבר)` : ''}. קול רווחי! ✅`;
+    explanationKey = cardsTocome === 2 ? 'engine.explain.profitable.runout' : 'engine.explain.profitable';
   } else if (outs > 0) {
-    explanation = `פוט אודס: ${potOdds.toFixed(1)}%. סיכוי לשפר: ${outsOdds.toFixed(1)}%${cardsTocome === 2 ? ` (${outsOddsRunout.toFixed(1)}% עד הריבר)` : ''}. קול לא רווחי — שקול פולד. ❌`;
+    explanationKey = cardsTocome === 2 ? 'engine.explain.unprofitable.runout' : 'engine.explain.unprofitable';
   } else {
-    explanation = `אין אאוטס ברורים. המשך רק עם יד חזקה כרגע.`;
+    explanationKey = 'engine.explain.no.outs';
   }
 
-  return { potOdds, outsOdds, outsOddsRunout, isCallProfitable, explanation };
+  return { potOdds, outsOdds, outsOddsRunout, isCallProfitable, explanationKey, explanationParams };
 }
 
 // Calculate simple equity approximation
 export function calculateEquity(hand: Card[], community: Card[]): number {
   const allCards = [...hand, ...community];
   if (allCards.length < 5) {
-    // Rough preflop equity based on hand
     const r1 = rankValue(hand[0].rank);
     const r2 = rankValue(hand[1].rank);
     const isPair = r1 === r2;
     const isSuited = hand[0].suit === hand[1].suit;
     const high = Math.max(r1, r2);
-    
+
     let equity = 0.3;
     if (isPair) equity = 0.5 + (high / 14) * 0.35;
     else {
@@ -504,30 +509,22 @@ export function calculateEquity(hand: Card[], community: Card[]): number {
     }
     return Math.min(0.95, Math.max(0.15, equity));
   }
-  
+
   const eval_ = evaluateHand(allCards);
   return Math.min(0.95, 0.3 + eval_.rank * 0.07);
 }
 
-export function getPhaseHebrew(phase: GamePhase): string {
-  const map: Record<GamePhase, string> = {
-    preflop: 'פרה-פלופ',
-    flop: 'פלופ',
-    turn: 'טרן',
-    river: 'ריבר',
-    showdown: 'שואדאון',
-    finished: 'סיום',
-  };
-  return map[phase];
+/** Returns the i18n key for a phase (e.g. 'phase.preflop'). */
+export function getPhaseKey(phase: GamePhase): string {
+  return `phase.${phase}`;
 }
 
-export function getActionHebrew(action: Action): string {
-  const map: Record<Action, string> = {
-    fold: 'פולד',
-    check: "צ'ק",
-    call: 'קול',
-    raise: 'רייז',
-    'all-in': 'אול-אין',
-  };
-  return map[action];
+/** Returns the i18n key for an action (e.g. 'action.fold'). */
+export function getActionKey(action: Action): string {
+  return `action.${action}`;
 }
+
+// Backwards-compat aliases — return translation keys; consumers must wrap in t().
+export const getPhaseHebrew = getPhaseKey;
+export const getActionHebrew = getActionKey;
+
