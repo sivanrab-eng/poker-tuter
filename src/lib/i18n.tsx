@@ -831,6 +831,21 @@ const translations: Record<Language, Record<string, string>> = {
     "bot.change.level": "שנה רמה",
     "bot.hands": "ידיים",
     "bot.wins": "נצחונות",
+
+    // Engine
+    "engine.fold.player": "פולד של השחקן",
+    "engine.fold.bot": "פולד של הבוט",
+    "engine.explain.free.outs": "אין צורך לשלם — צ׳ק חינמי. יש לך {outs} אאוטס ({odds}% לשפר).",
+    "engine.explain.free.no.outs": "אין צורך לשלם ואין דרואו ברורים — צ׳ק.",
+    "engine.explain.profitable": "פוט אודס: {pot}%. סיכוי לשפר: {odds}%. קול רווחי! ✅",
+    "engine.explain.profitable.runout": "פוט אודס: {pot}%. סיכוי לשפר: {odds}% ({runout}% עד הריבר). קול רווחי! ✅",
+    "engine.explain.unprofitable": "פוט אודס: {pot}%. סיכוי לשפר: {odds}%. קול לא רווחי — שקול פולד. ❌",
+    "engine.explain.unprofitable.runout": "פוט אודס: {pot}%. סיכוי לשפר: {odds}% ({runout}% עד הריבר). קול לא רווחי — שקול פולד. ❌",
+    "engine.explain.no.outs": "אין אאוטס ברורים. המשך רק עם יד חזקה.",
+    "draw.desc.flush": "{n} קלפי {suit} נותרו בחפיסה",
+    "draw.desc.straight": "צריך {rank} להשלמת סטרייט",
+    "draw.desc.overcards": "{n} קלפים לזוג עם קלפי היד",
+    "draw.desc.set": "{n} קלפים לשיפור לשלישייה",
   },
 };
 
