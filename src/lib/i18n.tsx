@@ -925,8 +925,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("popstate", onPopState);
   }, [lang]);
 
-  const t = (key: string): string => {
-    return translations[lang][key] ?? translations["en"][key] ?? key;
+  const t = (key: string, params?: TParams): string => {
+    let str = translations[lang][key] ?? translations["en"][key] ?? key;
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        str = str.split(`{${k}}`).join(String(v));
+      }
+    }
+    return str;
   };
 
   return (
