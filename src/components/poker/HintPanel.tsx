@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import {
   GameState,
-  Action,
   calculateEquity,
   calculateOuts,
   calculatePotOdds,
-  getPhaseHebrew,
-  getActionHebrew,
+  getPhaseKey,
 } from '@/lib/pokerEngine';
+import { useI18n } from '@/lib/i18n';
 
 interface HintPanelProps {
   game: GameState;
@@ -47,7 +46,7 @@ const VariableItem = ({ label, value, explanation }: VariableItemProps) => {
 type SimAction = 'call' | 'raise' | 'fold';
 
 const HintPanel = ({ game, onClose }: HintPanelProps) => {
-  const [selectedAction, setSelectedAction] = useState<SimAction | null>(null);
+  const { t } = useI18n();
 
   const toCall = Math.max(0, game.botBet - game.playerBet);
   const equity = calculateEquity(game.playerHand, game.communityCards);
@@ -66,131 +65,128 @@ const HintPanel = ({ game, onClose }: HintPanelProps) => {
         )
       : null;
 
-  const phase = getPhaseHebrew(game.phase);
+  const phase = t(getPhaseKey(game.phase));
   const equityPct = (equity * 100).toFixed(0);
   const improvePct = potOddsResult?.outsOdds.toFixed(1) ?? '—';
   const potOddsPct = potOddsResult?.potOdds.toFixed(1) ?? '—';
   const outsCount = outsResult?.totalOuts ?? 0;
   const raiseSize = Math.max(toCall * 2, Math.round(game.pot * 0.6));
 
-  // Simulation for each action
   const getActionAnalysis = (action: SimAction): { rating: 'good' | 'neutral' | 'bad'; title: string; lines: string[] } => {
     if (action === 'fold') {
       const invested = game.playerBet;
-      const lines = [
-        `📐 ניתוח פולד:`,
-        `• אתה מוותר על הפוט (${game.pot} צ׳יפס).`,
-        `• הפסד מצטבר ביד: ${invested} צ׳יפס שכבר השקעת.`,
-        `• אקוויטי נוכחי: ${equityPct}% — ${Number(equityPct) > 40 ? 'גבוה מדי לוותר!' : 'נמוך, ויתור סביר.'}`,
+      const lines: string[] = [
+        t('hint.fold.line.heading'),
+        t('hint.fold.line.giveup', { pot: game.pot }),
+        t('hint.fold.line.invested', { n: invested }),
+        t('hint.fold.line.equity', {
+          n: equityPct,
+          note: Number(equityPct) > 40 ? t('hint.fold.line.equity.high') : t('hint.fold.line.equity.low'),
+        }),
       ];
       if (potOddsResult) {
-        lines.push(`• פוט אודס: ${potOddsPct}% | סיכוי שיפור: ${improvePct}%`);
-        if (potOddsResult.isCallProfitable) {
-          lines.push(`\n❌ הקול רווחי כאן — פולד מבזבז הזדמנות!`);
-        } else {
-          lines.push(`\n✅ הקול לא רווחי — פולד חוסך ${toCall} צ׳יפס.`);
-        }
+        lines.push(t('hint.fold.line.potodds', { pot: potOddsPct, improve: improvePct }));
+        lines.push(potOddsResult.isCallProfitable
+          ? t('hint.fold.line.profitable')
+          : t('hint.fold.line.unprofitable', { n: toCall }));
       } else {
         lines.push(Number(equityPct) < 30
-          ? `\n✅ יד חלשה — פולד חוסך כסף לטווח ארוך.`
-          : `\n⚠️ שקול צ׳ק/קול לפני שמוותר — יד לא חלשה.`
-        );
+          ? t('hint.fold.line.weak')
+          : t('hint.fold.line.consider'));
       }
       const rating = (potOddsResult?.isCallProfitable || Number(equityPct) > 50) ? 'bad' : Number(equityPct) < 30 ? 'good' : 'neutral';
-      return { rating, title: 'פולד — ניתוח', lines };
+      return { rating, title: t('hint.action.fold.title'), lines };
     }
 
     if (action === 'call') {
       const newPot = game.pot + toCall;
-      const lines = [
-        `📐 ניתוח קול (${toCall === 0 ? 'צ׳ק חינמי' : `עלות: ${toCall}`}):`,
-        `• פוט אחרי קול: ${game.pot} + ${toCall} = ${newPot} צ׳יפס`,
+      const label = toCall === 0 ? t('hint.call.line.label.free') : t('hint.call.line.label.cost', { n: toCall });
+      const lines: string[] = [
+        t('hint.call.line.heading', { label }),
+        t('hint.call.line.newpot', { pot: game.pot, tocall: toCall, newpot: newPot }),
       ];
       if (toCall === 0) {
-        lines.push(`• עלות: 0 — אין סיכון!`);
-        lines.push(`• אקוויטי: ${equityPct}%`);
-        lines.push(`\n✅ צ׳ק חינמי — תמיד נכון להמשיך.`);
+        lines.push(t('hint.call.line.zero.cost'));
+        lines.push(t('hint.call.line.equity', { n: equityPct }));
+        lines.push(t('hint.call.line.zero.right'));
         if (outsCount > 0) {
-          lines.push(`   ${outsCount} אאוטס (${improvePct}% לשפר) ללא עלות.`);
+          lines.push(t('hint.call.line.zero.outs', { n: outsCount, improve: improvePct }));
         }
-        return { rating: 'good', title: 'קול / צ׳ק — ניתוח', lines };
+        return { rating: 'good', title: t('hint.action.call.title'), lines };
       }
-      lines.push(`• פוט אודס: ${toCall} / ${newPot} = ${potOddsPct}%`);
-      lines.push(`• אאוטס: ${outsCount} | סיכוי שיפור: ${improvePct}%`);
-      lines.push(`• אקוויטי: ${equityPct}%`);
+      lines.push(t('hint.call.line.potodds', { tocall: toCall, newpot: newPot, potodds: potOddsPct }));
+      lines.push(t('hint.call.line.outs', { n: outsCount, improve: improvePct }));
+      lines.push(t('hint.call.line.equity', { n: equityPct }));
       if (potOddsResult?.isCallProfitable) {
-        lines.push(`\n✅ קול רווחי! סיכוי שיפור (${improvePct}%) > פוט אודס (${potOddsPct}%).`);
-        lines.push(`   לאורך 100 ידיים כאלה, תרוויח בממוצע.`);
+        lines.push(t('hint.call.line.profitable', { improve: improvePct, potodds: potOddsPct }));
+        lines.push(t('hint.call.line.profitable.long'));
       } else {
-        lines.push(`\n❌ קול לא רווחי: סיכוי שיפור (${improvePct}%) < פוט אודס (${potOddsPct}%).`);
-        lines.push(`   לאורך 100 ידיים כאלה, תפסיד בממוצע.`);
+        lines.push(t('hint.call.line.unprofitable', { improve: improvePct, potodds: potOddsPct }));
+        lines.push(t('hint.call.line.unprofitable.long'));
       }
       const rating = potOddsResult?.isCallProfitable ? 'good' : 'bad';
-      return { rating, title: 'קול — ניתוח', lines };
+      return { rating, title: t('hint.action.callcost.title'), lines };
     }
 
     // raise
     const newPot = game.pot + toCall + raiseSize;
-    const lines = [
-      `📐 ניתוח רייז (${raiseSize} צ׳יפס):`,
-      `• עלות: ${toCall} (קול) + ${raiseSize} (העלאה) = ${toCall + raiseSize} צ׳יפס`,
-      `• פוט אחרי רייז: ~${newPot} צ׳יפס`,
-      `• אקוויטי: ${equityPct}%`,
+    const lines: string[] = [
+      t('hint.raise.line.heading', { size: raiseSize }),
+      t('hint.raise.line.cost', { tocall: toCall, size: raiseSize, total: toCall + raiseSize }),
+      t('hint.raise.line.newpot', { newpot: newPot }),
+      t('hint.raise.line.equity', { n: equityPct }),
     ];
     if (outsCount > 0) {
-      lines.push(`• אאוטס: ${outsCount} | שיפור: ${improvePct}%`);
+      lines.push(t('hint.raise.line.outs', { outs: outsCount, improve: improvePct }));
     }
     if (Number(equityPct) > 55) {
-      lines.push(`\n✅ רייז חזק! אקוויטי גבוה (${equityPct}%) — בנה פוט.`);
-      lines.push(`   לחץ על היריב ותגרום לו לטעויות.`);
+      lines.push(t('hint.raise.line.strong', { n: equityPct }));
+      lines.push(t('hint.raise.line.strong.long'));
     } else if (Number(equityPct) > 40) {
-      lines.push(`\n⚠️ רייז כ-בלאף (סמי-בלאף): אקוויטי ${equityPct}%.`);
-      lines.push(`   יכול לעבוד אם היריב יפלד, אבל מסוכן.`);
+      lines.push(t('hint.raise.line.semibluff', { n: equityPct }));
+      lines.push(t('hint.raise.line.semibluff.long'));
     } else {
-      lines.push(`\n❌ רייז מסוכן! אקוויטי נמוך (${equityPct}%).`);
-      lines.push(`   אתה משקיע ${toCall + raiseSize} צ׳יפס עם סיכוי נמוך לזכות.`);
+      lines.push(t('hint.raise.line.risky', { n: equityPct }));
+      lines.push(t('hint.raise.line.risky.long', { total: toCall + raiseSize }));
     }
     const rating = Number(equityPct) > 55 ? 'good' : Number(equityPct) > 40 ? 'neutral' : 'bad';
-    return { rating, title: 'רייז — ניתוח', lines };
+    return { rating, title: t('hint.action.raise.title'), lines };
   };
 
-  const analysis = selectedAction ? getActionAnalysis(selectedAction) : null;
-
-  // Build recommendation
   const getRecommendation = (): { action: string; reason: string } => {
     if (toCall === 0) {
       return {
-        action: 'צ׳ק / רייז',
-        reason: `אין עלות להמשיך (צ׳ק חינמי). תמיד נכון לראות עוד קלפים בחינם.\n\nאם יש לך יד חזקה (אקוויטי ${equityPct}%), שקול רייז כדי לבנות פוט.`,
+        action: t('hint.rec.check.action'),
+        reason: t('hint.rec.check.reason', { equity: equityPct }),
       };
     }
     if (potOddsResult?.isCallProfitable) {
       return {
-        action: 'קול ✅',
-        reason: `סיכוי השיפור שלך (${improvePct}%) גבוה מפוט אודס (${potOddsPct}%).\nזה אומר שסטטיסטית, לאורך זמן, הקול ירוויח כסף.`,
+        action: t('hint.rec.call.action'),
+        reason: t('hint.rec.call.reason', { improve: improvePct, potodds: potOddsPct }),
       };
     }
     if (equity > 0.55) {
       return {
-        action: 'רייז',
-        reason: `אקוויטי גבוה של ${equityPct}% — יד חזקה.\nכדאי לבנות פוט ולגרום ליריב לשלם.`,
+        action: t('hint.rec.raise.action'),
+        reason: t('hint.rec.raise.reason', { equity: equityPct }),
       };
     }
     if (potOddsResult && !potOddsResult.isCallProfitable) {
       return {
-        action: 'פולד ❌',
-        reason: `סיכוי השיפור (${improvePct}%) נמוך מפוט אודס (${potOddsPct}%).\nלאורך זמן, קול כאן יפסיד כסף.`,
+        action: t('hint.rec.fold.action'),
+        reason: t('hint.rec.fold.reason', { improve: improvePct, potodds: potOddsPct }),
       };
     }
     if (equity < 0.3) {
       return {
-        action: 'פולד',
-        reason: `אקוויטי נמוך (${equityPct}%) — סיכוי נמוך לנצח.\nעדיף לחסוך צ׳יפס למשחקים עם יד טובה יותר.`,
+        action: t('hint.rec.fold2.action'),
+        reason: t('hint.rec.fold2.reason', { equity: equityPct }),
       };
     }
     return {
-      action: 'קול',
-      reason: `אקוויטי סביר (${equityPct}%). שווה לראות עוד קלפים אם המחיר סביר.`,
+      action: t('hint.rec.callsoft.action'),
+      reason: t('hint.rec.callsoft.reason', { equity: equityPct }),
     };
   };
 
@@ -204,10 +200,26 @@ const HintPanel = ({ game, onClose }: HintPanelProps) => {
   const ratingIcon = (r: 'good' | 'neutral' | 'bad') =>
     r === 'good' ? '✅' : r === 'bad' ? '❌' : '⚠️';
 
+  const callAnalysis = getActionAnalysis('call');
+  const raiseAnalysis = getActionAnalysis('raise');
+  const foldAnalysis = getActionAnalysis('fold');
+
+  const newPotCall = game.pot + toCall;
+  const raiseCost = toCall + raiseSize;
+  const newPotRaise = game.pot + raiseCost;
+
+  const callPotOdds = toCall === 0 ? '0%' : `${potOddsPct}%`;
+  const raisePotOdds = `${(raiseCost / (newPotRaise + raiseCost) * 100).toFixed(1)}%`;
+
+  // Outs explanation lines for VariableItem
+  const outsExpLines = outsResult && outsResult.draws.length > 0
+    ? outsResult.draws.map(d => t('hint.var.outs.line', { name: t(d.name), n: d.outs })).join('\n')
+    : t('hint.var.outs.none');
+
   return (
     <div className="bg-secondary/90 backdrop-blur-sm rounded-lg gold-border p-3 space-y-2 animate-in slide-in-from-bottom-2 duration-200">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-heading font-bold text-primary">💡 רמז — {phase}</h3>
+        <h3 className="text-xs font-heading font-bold text-primary">{t('hint.heading', { phase })}</h3>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
           <X size={14} />
         </button>
@@ -215,189 +227,151 @@ const HintPanel = ({ game, onClose }: HintPanelProps) => {
 
       <div className="bg-card/30 rounded-lg overflow-hidden">
         <VariableItem
-          label="פוט (Pot)"
-          value={`${game.pot} צ׳יפס`}
-          explanation={`הפוט הוא סך כל הצ׳יפס שהושקעו ביד הנוכחית.\n\n📐 חישוב: סכום כל ההימורים מכל השלבים = ${game.pot} צ׳יפס.\n\nככל שהפוט גדול יותר, כך משתלם יותר לנסות לזכות בו.`}
+          label={t('hint.var.pot.label')}
+          value={t('hint.var.pot.value', { n: game.pot })}
+          explanation={t('hint.var.pot.exp', { n: game.pot })}
         />
         <VariableItem
-          label="עלות קול (To Call)"
-          value={toCall === 0 ? 'חינמי ✅' : `${toCall} צ׳יפס`}
+          label={t('hint.var.tocall.label')}
+          value={toCall === 0 ? t('hint.var.tocall.free') : t('hint.var.tocall.value', { n: toCall })}
           explanation={
             toCall === 0
-              ? `אין הימור לשלם — אתה יכול לעשות צ׳ק בחינם.\n\n📐 חישוב: הימור הבוט (${game.botBet}) − ההימור שלך (${game.playerBet}) = 0.\n\nתמיד נכון להמשיך כשאין עלות!`
-              : `כמה צ׳יפס אתה צריך לשלם כדי להישאר ביד.\n\n📐 חישוב: הימור הבוט (${game.botBet}) − ההימור שלך (${game.playerBet}) = ${toCall} צ׳יפס.\n\nזה הסכום שצריך לבדוק אם "שווה" לשלם.`
+              ? t('hint.var.tocall.exp.free', { bot: game.botBet, me: game.playerBet })
+              : t('hint.var.tocall.exp.cost', { bot: game.botBet, me: game.playerBet, n: toCall })
           }
         />
         <VariableItem
-          label="פוט אודס (Pot Odds)"
-          value={toCall === 0 ? '0% (חינמי)' : potOddsResult ? `${potOddsPct}%` : '—'}
+          label={t('hint.var.potodds.label')}
+          value={toCall === 0 ? t('hint.var.potodds.zero') : potOddsResult ? t('hint.var.potodds.value', { n: potOddsPct }) : '—'}
           explanation={
             toCall === 0
-              ? `פוט אודס = עלות הקול / (הפוט + עלות הקול)\n\n📐 חישוב: 0 / (${game.pot} + 0) = 0%\n\nכשהפוט אודס הם 0%, כל סיכוי שיפור הופך את ההמשך לרווחי.`
+              ? t('hint.var.potodds.exp.free', { pot: game.pot })
               : potOddsResult
-              ? `פוט אודס = עלות הקול / (הפוט + עלות הקול)\n\n📐 חישוב: ${toCall} / (${game.pot} + ${toCall}) = ${potOddsPct}%\n\nאם סיכוי השיפור שלך גבוה מ-${potOddsPct}%, הקול רווחי.`
-              : 'פוט אודס מחושבים מהפלופ ואילך.'
+              ? t('hint.var.potodds.exp.cost', { n: toCall, pot: game.pot, odds: potOddsPct })
+              : t('hint.var.potodds.exp.na')
           }
         />
         {outsResult && (
           <VariableItem
-            label="אאוטס (Outs)"
+            label={t('hint.var.outs.label')}
             value={`${outsResult.totalOuts}`}
-            explanation={`אאוטס = קלפים בחפיסה שישפרו את היד שלך.\n\n📐 נותרו ${outsResult.cardsRemaining} קלפים בחפיסה.\n${outsResult.draws.length > 0
-              ? outsResult.draws.map(d => `• ${d.name}: ${d.outs} אאוטס`).join('\n')
-              : '• אין דרואו ספציפיים'
-            }\n\nסה״כ: ${outsResult.totalOuts} אאוטס מתוך ${outsResult.cardsRemaining} קלפים.`}
+            explanation={t('hint.var.outs.exp', {
+              remaining: outsResult.cardsRemaining,
+              lines: outsExpLines,
+              total: outsResult.totalOuts,
+            })}
           />
         )}
         {potOddsResult && outsResult && (
           <VariableItem
-            label="סיכוי שיפור (%)"
-            value={`${improvePct}%${game.communityCards.length === 3 ? ` (${potOddsResult.outsOddsRunout.toFixed(1)}% עד ריבר)` : ''}`}
-            explanation={`סיכוי שיפור = אאוטס / קלפים שנותרו\n\n📐 חישוב (קלף הבא): ${outsResult.totalOuts} / ${outsResult.cardsRemaining} = ${improvePct}%${
+            label={t('hint.var.improve.label')}
+            value={
               game.communityCards.length === 3
-                ? `\n\n📐 חישוב (עד ריבר — כלל ה-4×): ${outsResult.totalOuts} × 4 ≈ ${outsResult.totalOuts * 4}% (מדויק: ${potOddsResult.outsOddsRunout.toFixed(1)}%)`
-                : ''
-            }\n\nככל שיש יותר אאוטס, הסיכוי לשפר יד גדל.`}
+                ? t('hint.var.improve.value.runout', { n: improvePct, runout: potOddsResult.outsOddsRunout.toFixed(1) })
+                : t('hint.var.improve.value', { n: improvePct })
+            }
+            explanation={
+              game.communityCards.length === 3
+                ? t('hint.var.improve.exp.runout', {
+                    outs: outsResult.totalOuts,
+                    remaining: outsResult.cardsRemaining,
+                    odds: improvePct,
+                    ruleOf4: outsResult.totalOuts * 4,
+                    runout: potOddsResult.outsOddsRunout.toFixed(1),
+                  })
+                : t('hint.var.improve.exp.next', {
+                    outs: outsResult.totalOuts,
+                    remaining: outsResult.cardsRemaining,
+                    odds: improvePct,
+                  })
+            }
           />
         )}
         <VariableItem
-          label="אקוויטי (Equity)"
-          value={`${equityPct}%`}
-          explanation={`אקוויטי = הסיכוי הכולל שלך לזכות ביד.\n\n📐 ערך נוכחי: ${equityPct}%\n\nזה כולל גם את הסיכוי שהיד שלך כבר מנצחת עכשיו וגם את הסיכוי לשפר.\n\n• מעל 65% → רייז (בנה פוט)\n• 45-65% → קול (יד סבירה)\n• מתחת ל-30% → שקול פולד`}
+          label={t('hint.var.equity.label')}
+          value={t('hint.var.equity.value', { n: equityPct })}
+          explanation={t('hint.var.equity.exp', { n: equityPct })}
         />
       </div>
 
       {/* Comparison table */}
-      {(() => {
-        const callAnalysis = getActionAnalysis('call');
-        const raiseAnalysis = getActionAnalysis('raise');
-        const foldAnalysis = getActionAnalysis('fold');
+      <div className="space-y-1.5">
+        <p className="text-[10px] text-muted-foreground text-center">{t('hint.compare.heading')}</p>
+        <div className="overflow-x-auto rounded-lg border border-primary/20">
+          <table className="w-full text-[10px]">
+            <thead>
+              <tr className="bg-card/60 border-b border-primary/15">
+                <th className="py-1.5 px-2 text-right text-muted-foreground font-heading">{t('hint.compare.var')}</th>
+                <th className={`py-1.5 px-2 text-center font-heading border-x border-primary/10 ${ratingColor(callAnalysis.rating)} bg-opacity-30`}>
+                  {ratingIcon(callAnalysis.rating)} {toCall === 0 ? t('hint.compare.check') : t('hint.compare.call')}
+                </th>
+                <th className={`py-1.5 px-2 text-center font-heading border-l border-primary/10 ${ratingColor(raiseAnalysis.rating)} bg-opacity-30`}>
+                  {ratingIcon(raiseAnalysis.rating)} {t('hint.compare.raise')}
+                </th>
+                <th className={`py-1.5 px-2 text-center font-heading border-l border-primary/10 ${ratingColor(foldAnalysis.rating)} bg-opacity-30`}>
+                  {ratingIcon(foldAnalysis.rating)} {t('hint.compare.fold')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-primary/10">
+                <td className="py-1 px-2 text-right text-primary font-bold">{t('hint.compare.cost')}</td>
+                <td className="py-1 px-2 text-center border-x border-primary/10">{toCall === 0 ? '0 ✅' : toCall}</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10">{raiseCost}</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10">0</td>
+              </tr>
+              <tr className="border-b border-primary/10 bg-card/20">
+                <td className="py-1 px-2 text-right text-primary font-bold">{t('hint.compare.pot.after')}</td>
+                <td className="py-1 px-2 text-center border-x border-primary/10">{newPotCall}</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10">~{newPotRaise}</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
+              </tr>
+              <tr className="border-b border-primary/10">
+                <td className="py-1 px-2 text-right text-primary font-bold">{t('hint.compare.potodds')}</td>
+                <td className="py-1 px-2 text-center border-x border-primary/10">{callPotOdds}</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10">{raisePotOdds}</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
+              </tr>
+              <tr className="border-b border-primary/10 bg-card/20">
+                <td className="py-1 px-2 text-right text-primary font-bold">{t('hint.compare.equity')}</td>
+                <td className="py-1 px-2 text-center border-x border-primary/10">{equityPct}%</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10">{equityPct}%</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">0%</td>
+              </tr>
+              <tr className="border-b border-primary/10">
+                <td className="py-1 px-2 text-right text-primary font-bold">{t('hint.compare.outs')}</td>
+                <td className="py-1 px-2 text-center border-x border-primary/10">{outsCount}</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10">{outsCount}</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
+              </tr>
+              <tr className="border-b border-primary/10 bg-card/20">
+                <td className="py-1 px-2 text-right text-primary font-bold">{t('hint.compare.improve')}</td>
+                <td className="py-1 px-2 text-center border-x border-primary/10">{improvePct}%</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10">{improvePct}%</td>
+                <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
+              </tr>
+              <tr>
+                <td className="py-1 px-2 text-right text-primary font-bold">{t('hint.compare.risk')}</td>
+                <td className={`py-1 px-2 text-center border-x border-primary/10 ${ratingColor(callAnalysis.rating)}`}>
+                  {toCall === 0 ? t('hint.risk.zero') : callAnalysis.rating === 'good' ? t('hint.risk.low') : t('hint.risk.high')}
+                </td>
+                <td className={`py-1 px-2 text-center border-l border-primary/10 ${ratingColor(raiseAnalysis.rating)}`}>
+                  {raiseAnalysis.rating === 'good' ? t('hint.risk.medium') : raiseAnalysis.rating === 'neutral' ? t('hint.risk.medium') : t('hint.risk.high')}
+                </td>
+                <td className={`py-1 px-2 text-center border-l border-primary/10 ${ratingColor(foldAnalysis.rating)}`}>
+                  {t('hint.risk.zero')}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-        const newPotCall = game.pot + toCall;
-        const raiseCost = toCall + raiseSize;
-        const newPotRaise = game.pot + raiseCost;
-
-        const callPotOdds = toCall === 0 ? '0%' : `${potOddsPct}%`;
-        const raisePotOdds = `${(raiseCost / (newPotRaise + raiseCost) * 100).toFixed(1)}%`;
-
-        return (
-          <div className="space-y-1.5">
-            <p className="text-[10px] text-muted-foreground text-center">📊 השוואת פעולות</p>
-            <div className="overflow-x-auto rounded-lg border border-primary/20">
-              <table className="w-full text-[10px]">
-                <thead>
-                  <tr className="bg-card/60 border-b border-primary/15">
-                    <th className="py-1.5 px-2 text-right text-muted-foreground font-heading">משתנה</th>
-                    <th className={`py-1.5 px-2 text-center font-heading border-x border-primary/10 ${ratingColor(callAnalysis.rating)} bg-opacity-30`}>
-                      {ratingIcon(callAnalysis.rating)} {toCall === 0 ? 'צ׳ק' : 'קול'}
-                    </th>
-                    <th className={`py-1.5 px-2 text-center font-heading border-l border-primary/10 ${ratingColor(raiseAnalysis.rating)} bg-opacity-30`}>
-                      {ratingIcon(raiseAnalysis.rating)} רייז
-                    </th>
-                    <th className={`py-1.5 px-2 text-center font-heading border-l border-primary/10 ${ratingColor(foldAnalysis.rating)} bg-opacity-30`}>
-                      {ratingIcon(foldAnalysis.rating)} פולד
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-primary/10">
-                    <td className="py-1 px-2 text-right text-primary font-bold">💰 עלות</td>
-                    <td className="py-1 px-2 text-center border-x border-primary/10">{toCall === 0 ? '0 ✅' : toCall}</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10">{raiseCost}</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10">0</td>
-                  </tr>
-                  <tr className="border-b border-primary/10 bg-card/20">
-                    <td className="py-1 px-2 text-right text-primary font-bold">🏦 פוט אחרי</td>
-                    <td className="py-1 px-2 text-center border-x border-primary/10">{newPotCall}</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10">~{newPotRaise}</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
-                  </tr>
-                  <tr className="border-b border-primary/10">
-                    <td className="py-1 px-2 text-right text-primary font-bold">📐 Pot Odds</td>
-                    <td className="py-1 px-2 text-center border-x border-primary/10">{callPotOdds}</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10">{raisePotOdds}</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
-                  </tr>
-                  <tr className="border-b border-primary/10 bg-card/20">
-                    <td className="py-1 px-2 text-right text-primary font-bold">📈 Equity</td>
-                    <td className="py-1 px-2 text-center border-x border-primary/10">{equityPct}%</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10">{equityPct}%</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">0%</td>
-                  </tr>
-                  <tr className="border-b border-primary/10">
-                    <td className="py-1 px-2 text-right text-primary font-bold">🎯 אאוטס</td>
-                    <td className="py-1 px-2 text-center border-x border-primary/10">{outsCount}</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10">{outsCount}</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
-                  </tr>
-                  <tr className="border-b border-primary/10 bg-card/20">
-                    <td className="py-1 px-2 text-right text-primary font-bold">📊 שיפור %</td>
-                    <td className="py-1 px-2 text-center border-x border-primary/10">{improvePct}%</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10">{improvePct}%</td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10 text-muted-foreground">—</td>
-                  </tr>
-                  <tr>
-                    <td className="py-1 px-2 text-right text-primary font-bold">⚠️ סיכון</td>
-                    <td className={`py-1 px-2 text-center border-x border-primary/10 font-bold ${toCall === 0 ? 'text-green-400' : toCall <= game.pot * 0.3 ? 'text-yellow-400' : 'text-red-400'}`}>
-                      {toCall === 0 ? 'אפס' : toCall <= game.pot * 0.3 ? 'נמוך' : 'בינוני'}
-                    </td>
-                    <td className={`py-1 px-2 text-center border-l border-primary/10 font-bold ${Number(equityPct) > 55 ? 'text-yellow-400' : 'text-red-400'}`}>
-                      {Number(equityPct) > 55 ? 'בינוני' : 'גבוה'}
-                    </td>
-                    <td className="py-1 px-2 text-center border-l border-primary/10 font-bold text-green-400">
-                      אפס
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Expandable details per action */}
-            <div className="flex gap-1.5">
-              {(['call', 'raise', 'fold'] as SimAction[]).map((act) => {
-                const a = act === 'call' ? callAnalysis : act === 'raise' ? raiseAnalysis : foldAnalysis;
-                return (
-                  <button
-                    key={act}
-                    onClick={() => setSelectedAction(selectedAction === act ? null : act)}
-                    className={`flex-1 py-1 rounded-md text-[10px] font-heading font-bold transition-all border ${
-                      selectedAction === act
-                        ? ratingColor(a.rating)
-                        : 'bg-card/40 text-foreground/70 border-primary/20 hover:border-primary/50'
-                    }`}
-                  >
-                    {act === 'call' ? (toCall === 0 ? 'פירוט צ׳ק' : 'פירוט קול') : act === 'raise' ? 'פירוט רייז' : 'פירוט פולד'}
-                  </button>
-                );
-              })}
-            </div>
-
-            {analysis && (
-              <div className={`rounded-lg border p-2.5 space-y-1 animate-in fade-in duration-200 ${ratingColor(analysis.rating)}`}>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm">{ratingIcon(analysis.rating)}</span>
-                  <span className="text-xs font-heading font-bold">{analysis.title}</span>
-                </div>
-                <div className="text-[10px] leading-relaxed whitespace-pre-line opacity-90">
-                  {analysis.lines.join('\n')}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* Final recommendation */}
-      <div className={`rounded-lg p-2 ${
-        recommendation.action.includes('פולד') ? 'bg-red-500/15 border border-red-500/30' :
-        recommendation.action.includes('רייז') ? 'bg-primary/15 border border-primary/30' :
-        'bg-green-500/15 border border-green-500/30'
-      }`}>
-        <VariableItem
-          label="המלצת פעולה"
-          value={recommendation.action}
-          explanation={recommendation.reason}
-        />
+      {/* Recommendation */}
+      <div className={`rounded-lg p-2 border ${ratingColor('good')}`}>
+        <p className="text-[10px] font-heading font-bold mb-1">{t('hint.rec.heading')}</p>
+        <p className="text-xs font-bold mb-1">{recommendation.action}</p>
+        <p className="text-[10px] whitespace-pre-line opacity-90">{recommendation.reason}</p>
       </div>
     </div>
   );
