@@ -331,9 +331,18 @@ export function getBotHandEval(state: GameState): HandEval | null {
 }
 
 // Calculate outs — cards that improve the player's hand
+export interface DrawInfo {
+  /** Translation key, e.g. 'draw.flush' */
+  name: string;
+  outs: number;
+  /** Translation key + params for description */
+  descriptionKey: string;
+  descriptionParams: Record<string, string | number>;
+}
+
 export interface OutsResult {
   totalOuts: number;
-  draws: { name: string; outs: number; description: string }[];
+  draws: DrawInfo[];
   cardsRemaining: number;
 }
 
@@ -355,7 +364,7 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
   }
 
   const currentEval = allKnown.length >= 5 ? evaluateHand(allKnown) : { rank: 0, kickers: [], name: '' };
-  const draws: { name: string; outs: number; description: string }[] = [];
+  const draws: DrawInfo[] = [];
   const outsSet = new Set<string>();
 
   // Check flush draw
@@ -365,17 +374,20 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
   for (const [suit, count] of Object.entries(suitCounts)) {
     if (count === 4 && currentEval.rank < 6) {
       const flushOuts = remaining.filter(c => c.suit === suit).length;
-      draws.push({ name: 'פלאש דרו', outs: flushOuts, description: `${flushOuts} קלפי ${suit} נותרו בחפיסה` });
+      draws.push({
+        name: 'draw.flush',
+        outs: flushOuts,
+        descriptionKey: 'draw.desc.flush',
+        descriptionParams: { n: flushOuts, suit },
+      });
       remaining.filter(c => c.suit === suit).forEach(c => outsSet.add(`${c.rank}${c.suit}`));
     }
   }
 
   // Check straight draw (open-ended and gutshot)
   const numericRanks = [...new Set(allKnown.map(c => rankValue(c.rank)))].sort((a, b) => a - b);
-  // Check for 4-in-a-row sequences (open-ended) or gaps (gutshot)
   for (let target = 5; target <= 14; target++) {
     const seqRanks = [target - 4, target - 3, target - 2, target - 1, target];
-    // Handle ace-low
     const adjRanks = seqRanks.map(r => r < 2 ? r + 13 : r > 14 ? r - 13 : r);
     const have = adjRanks.filter(r => numericRanks.includes(r));
     const missing = adjRanks.filter(r => !numericRanks.includes(r));
@@ -384,10 +396,15 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
       const straightOuts = remaining.filter(c => rankValue(c.rank) === neededRank);
       if (straightOuts.length > 0) {
         const isGutshot = !(missing[0] === adjRanks[0] || missing[0] === adjRanks[4]);
-        const drawName = isGutshot ? 'גאטשוט סטרייט דרו' : 'אופן-אנדד סטרייט דרו';
+        const drawName = isGutshot ? 'draw.gutshot' : 'draw.oesd';
         const existingDraw = draws.find(d => d.name === drawName);
         if (!existingDraw) {
-          draws.push({ name: drawName, outs: straightOuts.length, description: `צריך ${straightOuts[0].rank} להשלמת סטרייט` });
+          draws.push({
+            name: drawName,
+            outs: straightOuts.length,
+            descriptionKey: 'draw.desc.straight',
+            descriptionParams: { rank: straightOuts[0].rank },
+          });
           straightOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
         }
       }
@@ -400,14 +417,17 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
   community.forEach(c => commRankCounts[rankValue(c.rank)] = (commRankCounts[rankValue(c.rank)] || 0) + 1);
 
   if (currentEval.rank <= 1) {
-    // No pair yet — outs to pair one of our hole cards (overcards)
     const overOuts = remaining.filter(c => handRanks.includes(rankValue(c.rank)));
     if (overOuts.length > 0) {
-      draws.push({ name: 'זוג (אוברקארדס)', outs: overOuts.length, description: `${overOuts.length} קלפים לזוג עם קלפי היד` });
+      draws.push({
+        name: 'draw.overcards',
+        outs: overOuts.length,
+        descriptionKey: 'draw.desc.overcards',
+        descriptionParams: { n: overOuts.length },
+      });
       overOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
     }
   } else if (currentEval.rank === 2) {
-    // Pair — outs to trips/set
     const pairRank = hand.find(c => {
       const rv = rankValue(c.rank);
       const allRanks = allKnown.map(cc => rankValue(cc.rank));
@@ -416,7 +436,12 @@ export function calculateOuts(hand: Card[], community: Card[]): OutsResult {
     if (pairRank) {
       const setOuts = remaining.filter(c => c.rank === pairRank.rank);
       if (setOuts.length > 0) {
-        draws.push({ name: 'שלישייה (סט)', outs: setOuts.length, description: `${setOuts.length} קלפים לשיפור לשלישייה` });
+        draws.push({
+          name: 'draw.set',
+          outs: setOuts.length,
+          descriptionKey: 'draw.desc.set',
+          descriptionParams: { n: setOuts.length },
+        });
         setOuts.forEach(c => outsSet.add(`${c.rank}${c.suit}`));
       }
     }
