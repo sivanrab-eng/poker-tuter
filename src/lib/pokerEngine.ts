@@ -255,7 +255,7 @@ export function botAction(state: GameState): GameState {
     case 'fold':
       newState.winner = 'player';
       newState.phase = 'finished';
-      newState.winningHandName = 'פולד של הבוט';
+      newState.winningHandName = 'engine.fold.bot';
       return newState;
     case 'check':
       break;
