@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useI18n } from '@/lib/i18n';
 import type { GameState } from '@/lib/pokerEngine';
 
 interface Message {
@@ -15,6 +16,7 @@ interface AiCoachChatProps {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/poker-coach`;
 
 const AiCoachChat = ({ game }: AiCoachChatProps) => {
+  const { t, lang } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -28,10 +30,11 @@ const AiCoachChat = ({ game }: AiCoachChatProps) => {
   const gameContext = {
     phase: game.phase,
     playerHand: game.playerHand.map(c => `${c.rank}${c.suit}`).join(', '),
-    communityCards: game.communityCards.map(c => `${c.rank}${c.suit}`).join(', ') || 'אין עדיין',
+    communityCards: game.communityCards.map(c => `${c.rank}${c.suit}`).join(', ') || t('coach.chat.empty.community'),
     pot: game.pot,
     playerChips: game.playerChips,
     botChips: game.botChips,
+    language: lang,
   };
 
   const sendMessage = async () => {
@@ -97,7 +100,7 @@ const AiCoachChat = ({ game }: AiCoachChatProps) => {
         }
       }
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: '❌ שגיאה, נסה שוב' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: t('coach.chat.error') }]);
     }
     setIsLoading(false);
   };
@@ -107,7 +110,7 @@ const AiCoachChat = ({ game }: AiCoachChatProps) => {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-20 left-3 z-50 bg-primary text-primary-foreground rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-primary/90 transition-all animate-in fade-in"
-        title="שאל את המאמן"
+        title={t('coach.chat.tooltip')}
       >
         <MessageCircle size={22} />
       </button>
@@ -120,7 +123,7 @@ const AiCoachChat = ({ game }: AiCoachChatProps) => {
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <div className="flex items-center gap-2">
           <span className="text-lg">🎓</span>
-          <span className="text-sm font-heading font-bold text-primary">המאמן — שאל הכל על פוקר</span>
+          <span className="text-sm font-heading font-bold text-primary">{t('coach.chat.title')}</span>
         </div>
         <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground">
           <X size={18} />
@@ -131,11 +134,11 @@ const AiCoachChat = ({ game }: AiCoachChatProps) => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground text-xs mt-8 space-y-2">
-            <p>🎓 שלום! אני המאמן שלך.</p>
-            <p>שאל אותי כל שאלה על פוקר — אסטרטגיה, חוקים, הסתברות.</p>
-            <p className="text-[10px]">אני רואה את המשחק הנוכחי שלך ויכול להתייחס אליו!</p>
+            <p>{t('coach.chat.greet1')}</p>
+            <p>{t('coach.chat.greet2')}</p>
+            <p className="text-[10px]">{t('coach.chat.greet3')}</p>
             <div className="flex flex-wrap gap-1.5 justify-center mt-3">
-              {['מה לעשות עם היד הזו?', 'מה זה אאוטס?', 'מתי לעשות ריייז?'].map(q => (
+              {[t('coach.chat.suggest1'), t('coach.chat.suggest2'), t('coach.chat.suggest3')].map(q => (
                 <button
                   key={q}
                   onClick={() => { setInput(q); }}
@@ -177,9 +180,9 @@ const AiCoachChat = ({ game }: AiCoachChatProps) => {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && sendMessage()}
-          placeholder="שאל שאלה על פוקר..."
+          placeholder={t('coach.chat.placeholder')}
           className="flex-1 bg-secondary/40 rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50"
-          dir="rtl"
+          dir={lang === 'he' ? 'rtl' : 'ltr'}
         />
         <button
           onClick={sendMessage}
