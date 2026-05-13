@@ -35,7 +35,7 @@ function rankValue(r: string): number {
   return map[r] ?? 0;
 }
 
-function evaluateHand(cards: string[]): { score: number; name: string } {
+function evaluateHand(cards: string[]): { score: number; nameKey: string } {
   const suits = cards.map(c => c.slice(-1));
   const ranks = cards.map(c => c.slice(0, -1));
   const rc: Record<string, number> = {};
@@ -52,20 +52,20 @@ function evaluateHand(cards: string[]): { score: number; name: string } {
   if (isFlush && isStraight) {
     const fs = Object.entries(sc).find(([, c]) => c >= 5)![0];
     const fr = cards.filter(c => c.slice(-1) === fs).map(c => rankValue(c.slice(0, -1))).sort((a, b) => a - b);
-    return fr.slice(-5).join() === '8,9,10,11,12' ? { score: 9, name: 'רויאל פלאש' } : { score: 8, name: 'סטרייט פלאש' };
+    return fr.slice(-5).join() === '8,9,10,11,12' ? { score: 9, nameKey: 'hand.royal_flush' } : { score: 8, nameKey: 'hand.straight_flush' };
   }
-  if (counts[0] === 4) return { score: 7, name: 'קארה' };
-  if (counts[0] === 3 && counts[1] >= 2) return { score: 6, name: 'פול האוס' };
-  if (isFlush) return { score: 5, name: 'פלאש' };
-  if (isStraight) return { score: 4, name: 'סטרייט' };
-  if (counts[0] === 3) return { score: 3, name: 'שלישייה' };
-  if (counts[0] === 2 && counts[1] === 2) return { score: 2, name: 'שני זוגות' };
-  if (counts[0] === 2) return { score: 1, name: 'זוג' };
-  return { score: 0, name: 'קלף גבוה' };
+  if (counts[0] === 4) return { score: 7, nameKey: 'hand.four_of_a_kind' };
+  if (counts[0] === 3 && counts[1] >= 2) return { score: 6, nameKey: 'hand.full_house' };
+  if (isFlush) return { score: 5, nameKey: 'hand.flush' };
+  if (isStraight) return { score: 4, nameKey: 'hand.straight' };
+  if (counts[0] === 3) return { score: 3, nameKey: 'hand.three_of_a_kind' };
+  if (counts[0] === 2 && counts[1] === 2) return { score: 2, nameKey: 'hand.two_pair' };
+  if (counts[0] === 2) return { score: 1, nameKey: 'hand.pair' };
+  return { score: 0, nameKey: 'hand.high_card' };
 }
 
-const STAGE_NAMES: Record<string, string> = {
-  preflop: 'פרה-פלופ', flop: 'פלופ', turn: 'טרן', river: 'ריבר', showdown: 'שואדאון'
+const STAGE_KEYS: Record<string, string> = {
+  preflop: 'two.stage.preflop', flop: 'two.stage.flop', turn: 'two.stage.turn', river: 'two.stage.river', showdown: 'two.stage.showdown'
 };
 
 interface GameRoom {
