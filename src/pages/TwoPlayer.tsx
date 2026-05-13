@@ -207,8 +207,8 @@ const TwoPlayer = () => {
       .eq('room_code', code)
       .single();
 
-    if (!data) { setError('חדר לא נמצא. בדקי את הקוד.'); return; }
-    if (data.p2_joined) { setError('החדר כבר מלא.'); return; }
+    if (!data) { setError(t('two.lobby.error.notfound')); return; }
+    if (data.p2_joined) { setError(t('two.lobby.error.full')); return; }
 
     setRoomCode(code);
     setPlayerNum(2);
@@ -261,8 +261,8 @@ const TwoPlayer = () => {
           pot: newPot,
           ...actionField,
           result,
-          p1_eval: p1Eval.name,
-          p2_eval: p2Eval.name,
+          p1_eval: p1Eval.nameKey,
+          p2_eval: p2Eval.nameKey,
           current_turn: oppKey,
         } as any)
         .eq('room_code', roomCode);
@@ -292,12 +292,12 @@ const TwoPlayer = () => {
   };
 
   const shareRoom = () => {
-    const url = window.location.origin + '/multiplayer';
-    const text = `🃏 בוא לשחק איתי פוקר!\n\nכנס לקישור, בחר "הצטרף לחדר" והכנס את הקוד:\n\n*${roomCode}*\n\n${url}`;
+    const url = window.location.origin + import.meta.env.BASE_URL + 'multiplayer';
+    const text = t('two.share.text', { code: roomCode, url });
     if (navigator.share) {
-      navigator.share({ text, title: 'בוא לשחק פוקר!' });
+      navigator.share({ text, title: t('two.share.title') });
     } else {
-      navigator.clipboard.writeText(`קוד חדר: ${roomCode}\n${url}`);
+      navigator.clipboard.writeText(t('two.share.copy', { code: roomCode, url }));
     }
   };
 
@@ -311,15 +311,15 @@ const TwoPlayer = () => {
       <div className="h-screen bg-background flex flex-col overflow-hidden">
         <header className="flex items-center justify-between px-3 py-2 border-b border-border">
           <button onClick={() => navigate('/')} className="text-primary"><ArrowRight size={20} /></button>
-          <h1 className="text-sm font-heading font-bold text-primary">🃏 משחק לשניים</h1>
+          <h1 className="text-sm font-heading font-bold text-primary">{t('two.title')}</h1>
           <div className="w-5" />
         </header>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
           <div className="text-center space-y-2">
             <p className="text-4xl">👥</p>
-            <h2 className="text-xl font-heading font-bold text-primary">שני שחקנים — שני מכשירים</h2>
-            <p className="text-sm text-muted-foreground">כל אחד רואה את הקלפים שלו בלבד</p>
+            <h2 className="text-xl font-heading font-bold text-primary">{t('two.lobby.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('two.lobby.subtitle')}</p>
           </div>
 
           <div className="w-full max-w-xs space-y-3">
@@ -327,15 +327,15 @@ const TwoPlayer = () => {
               onClick={createRoom}
               className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-heading font-bold text-sm hover:bg-primary/90 transition-colors"
             >
-              ✨ צור חדר חדש
+              {t('two.lobby.create')}
             </button>
 
             <div className="border-t border-border pt-3 space-y-2">
-              <p className="text-xs text-muted-foreground text-center">הצטרף לחדר קיים</p>
+              <p className="text-xs text-muted-foreground text-center">{t('two.lobby.join.label')}</p>
               <input
                 value={inputCode}
                 onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-                placeholder="הכנסי קוד חדר..."
+                placeholder={t('two.lobby.join.placeholder')}
                 className="w-full px-3 py-2.5 rounded-lg border border-primary/30 bg-secondary/50 text-foreground text-center text-lg tracking-widest font-heading font-bold placeholder:text-muted-foreground/50 placeholder:text-sm placeholder:tracking-normal focus:outline-none focus:border-primary"
               />
               {error && <p className="text-xs text-destructive text-center">{error}</p>}
@@ -343,7 +343,7 @@ const TwoPlayer = () => {
                 onClick={joinRoom}
                 className="w-full py-2.5 rounded-lg bg-secondary text-foreground font-heading font-bold text-sm border border-primary/30 hover:bg-secondary/80 transition-colors"
               >
-                הצטרף →
+                {t('two.lobby.join.btn')}
               </button>
             </div>
           </div>
@@ -358,19 +358,19 @@ const TwoPlayer = () => {
       <div className="h-screen bg-background flex flex-col overflow-hidden">
         <header className="flex items-center justify-between px-3 py-2 border-b border-border">
           <button onClick={() => { setPhase('lobby'); setRoomCode(''); }} className="text-primary"><ArrowRight size={20} /></button>
-          <h1 className="text-sm font-heading font-bold text-primary">ממתין...</h1>
+          <h1 className="text-sm font-heading font-bold text-primary">{t('two.waiting.title')}</h1>
           <div className="w-5" />
         </header>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
           <p className="text-4xl animate-pulse">⏳</p>
           <p className="text-sm text-muted-foreground">
-            {playerNum === 1 ? 'ממתין לשחקן 2...' : 'ממתין לדילר...'}
+            {playerNum === 1 ? t('two.waiting.player') : t('two.waiting.dealer')}
           </p>
 
           {playerNum === 1 && (
             <div className="text-center space-y-3">
-              <p className="text-xs text-muted-foreground">שלח את הקוד לחבר:</p>
+              <p className="text-xs text-muted-foreground">{t('two.waiting.send')}</p>
               <div className="bg-card rounded-lg p-4 gold-border">
                 <p className="text-2xl font-heading font-bold text-primary tracking-[0.3em]">{roomCode}</p>
               </div>
@@ -379,13 +379,13 @@ const TwoPlayer = () => {
                   onClick={shareRoom}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 text-primary text-xs font-bold hover:bg-primary/20 transition-colors"
                 >
-                  <Share2 size={14} /> שתף
+                  <Share2 size={14} /> {t('two.waiting.share')}
                 </button>
                 <button
                   onClick={() => { navigator.clipboard.writeText(roomCode); }}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary border border-border text-foreground text-xs font-bold hover:bg-secondary/80 transition-colors"
                 >
-                  <Copy size={14} /> העתק קוד
+                  <Copy size={14} /> {t('two.waiting.copy')}
                 </button>
               </div>
             </div>
@@ -407,7 +407,7 @@ const TwoPlayer = () => {
       {/* Header */}
       <header className="flex items-center justify-between px-3 py-2 border-b border-border">
         <button onClick={() => navigate('/')} className="text-primary"><ArrowRight size={20} /></button>
-        <h1 className="text-sm font-heading font-bold text-primary">🃏 שחקן {playerNum}</h1>
+        <h1 className="text-sm font-heading font-bold text-primary">{t('two.game.player', { n: playerNum })}</h1>
         <span className="text-[10px] text-muted-foreground">#{roomCode}</span>
       </header>
 
@@ -415,13 +415,13 @@ const TwoPlayer = () => {
         {/* Chips & pot */}
         <div className="flex items-center justify-between text-[10px]">
           <span className="text-primary font-bold">💰 {myChips}</span>
-          <span className="text-foreground font-heading font-bold">סיר {gameState?.pot ?? 0}</span>
+          <span className="text-foreground font-heading font-bold">{t('two.game.pot', { n: gameState?.pot ?? 0 })}</span>
           <span className="text-muted-foreground">👤 {oppChips}</span>
         </div>
 
         {/* Stage bar */}
         <div className="flex gap-1">
-          {['פרה-פלופ', 'פלופ', 'טרן', 'ריבר'].map((n, i) => {
+          {['preflop', 'flop', 'turn', 'river'].map((n, i) => {
             const si = ['preflop', 'flop', 'turn', 'river', 'showdown'].indexOf(gameState?.stage ?? 'preflop');
             return (
               <div key={n} className={`flex-1 h-1 rounded-full ${i <= si ? 'bg-primary' : 'bg-secondary'}`} />
@@ -431,7 +431,7 @@ const TwoPlayer = () => {
 
         {/* Opponent */}
         <div className="bg-secondary/30 rounded-lg p-2 text-center">
-          <p className="text-[10px] text-muted-foreground mb-1">👤 יריב (שחקן {playerNum === 1 ? 2 : 1})</p>
+          <p className="text-[10px] text-muted-foreground mb-1">{t('two.game.opp.label', { n: playerNum === 1 ? 2 : 1 })}</p>
           <div className="flex gap-1 justify-center">
             {isShowdown && oppHand.length > 0
               ? oppHand.map((c, i) => <PlayingCard key={i} card={parseCardStr(c)} />)
@@ -440,7 +440,7 @@ const TwoPlayer = () => {
           </div>
           {isShowdown && gameState && (
             <p className="text-[10px] text-primary mt-1">
-              {oppKey === 'p1' ? gameState.p1_eval : gameState.p2_eval}
+              {t(oppKey === 'p1' ? (gameState.p1_eval ?? '') : (gameState.p2_eval ?? ''))}
             </p>
           )}
         </div>
@@ -448,7 +448,7 @@ const TwoPlayer = () => {
         {/* Community cards */}
         <div className="bg-secondary/50 rounded-lg p-2 gold-border">
           <p className="text-[10px] text-muted-foreground mb-1 text-center">
-            🂠 לוח — {STAGE_NAMES[gameState?.stage ?? 'preflop']}
+            {t('two.game.board', { stage: t(STAGE_KEYS[gameState?.stage ?? 'preflop']) })}
           </p>
           <div className="flex gap-1.5 justify-center min-h-[3.5rem] items-center">
             {communityShow.map((c, i) => (
@@ -464,7 +464,7 @@ const TwoPlayer = () => {
 
         {/* My hand */}
         <div className="bg-secondary/30 rounded-lg p-2 text-center">
-          <p className="text-[10px] text-muted-foreground mb-1">✋ הקלפים שלך</p>
+          <p className="text-[10px] text-muted-foreground mb-1">{t('two.game.your.cards')}</p>
           <div className="flex gap-1 justify-center">
             {myHand.map((c, i) => (
               <PlayingCard key={i} card={parseCardStr(c)} />
@@ -475,7 +475,7 @@ const TwoPlayer = () => {
         {/* Turn indicator */}
         <div className="bg-card rounded-lg p-2 gold-border text-center">
           <p className={`text-xs font-heading font-bold ${isShowdown ? 'text-primary' : isMyTurn ? 'text-green-400' : 'text-yellow-400'}`}>
-            {isShowdown ? '' : isMyTurn ? '🟢 התור שלך!' : '🟡 ממתין ליריב...'}
+            {isShowdown ? '' : isMyTurn ? t('two.game.your.turn') : t('two.game.waiting.opp')}
           </p>
         </div>
 
@@ -484,11 +484,11 @@ const TwoPlayer = () => {
           <div className={`rounded-lg p-3 text-center ${iWon ? 'bg-green-500/15' : iLost ? 'bg-red-500/15' : 'bg-yellow-500/15'}`}>
             <p className="text-2xl">{iWon ? '🏆' : iLost ? '💸' : '🤝'}</p>
             <p className="font-heading font-bold text-sm mt-1">
-              {iWon ? 'ניצחת!' : iLost ? 'הפסדת' : myResult === 'tie' ? 'תיקו!' : ''}
+              {iWon ? t('two.game.you.won') : iLost ? t('two.game.you.lost') : myResult === 'tie' ? t('two.game.tie') : ''}
             </p>
             {gameState?.p1_eval && (
               <p className="text-[10px] text-muted-foreground mt-1">
-                ש׳1: {gameState.p1_eval} · ש׳2: {gameState.p2_eval}
+                {t('two.game.eval.row', { p1: t(gameState.p1_eval), p2: t(gameState.p2_eval ?? '') })}
               </p>
             )}
           </div>
@@ -504,21 +504,21 @@ const TwoPlayer = () => {
               disabled={!isMyTurn}
               className="flex-1 py-2.5 rounded-lg bg-secondary text-foreground text-sm font-heading font-bold border border-primary/30 hover:bg-secondary/80 transition-colors disabled:opacity-40"
             >
-              ✅ קול
+              {t('two.game.btn.call')}
             </button>
             <button
               onClick={() => doAction('raise')}
               disabled={!isMyTurn}
               className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-heading font-bold hover:bg-primary/90 transition-colors disabled:opacity-40"
             >
-              📈 ריייז
+              {t('two.game.btn.raise')}
             </button>
             <button
               onClick={() => doAction('fold')}
               disabled={!isMyTurn}
               className="flex-1 py-2.5 rounded-lg bg-accent text-accent-foreground text-sm font-heading font-bold hover:bg-accent/90 transition-colors disabled:opacity-40"
             >
-              ❌ פולד
+              {t('two.game.btn.fold')}
             </button>
           </div>
         ) : (
@@ -527,7 +527,7 @@ const TwoPlayer = () => {
             disabled={playerNum !== 1}
             className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-heading font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {playerNum === 1 ? '🔄 סיבוב חדש' : 'ממתין לדילר...'}
+            {playerNum === 1 ? t('two.game.btn.new') : t('two.game.btn.waiting')}
           </button>
         )}
       </div>
